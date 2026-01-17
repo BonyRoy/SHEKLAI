@@ -1,5 +1,4 @@
 import "./Footer.css";
-import { FiDollarSign } from "react-icons/fi";
 
 const Footer = () => {
   return (

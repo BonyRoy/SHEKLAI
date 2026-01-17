@@ -1,5 +1,5 @@
 import "./What.css";
-import { FiFileText, FiDatabase } from "react-icons/fi";
+import { FiFileText } from "react-icons/fi";
 
 const What = () => {
   const integrations = [
