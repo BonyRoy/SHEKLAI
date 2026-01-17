@@ -1,0 +1,31 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --bg-color: #ffffff;
+  --text-color: #000000;
+  --border-color: #000000;
+  --secondary-bg: #f5f5f5;
+  --card-bg: #ffffff;
+  --text-secondary: #666666;
+  --text-title: #333333;
+}
+
+[data-theme="dark"] {
+  --bg-color: #000000;
+  --text-color: #ffffff;
+  --border-color: #ffffff;
+  --secondary-bg: #1a1a1a;
+  --card-bg: #2a2a2a;
+  --text-secondary: #b0b0b0;
+  --text-title: #ffffff;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: Arial, Helvetica, sans-serif;
+}

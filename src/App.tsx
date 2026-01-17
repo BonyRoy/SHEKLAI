@@ -1,0 +1,28 @@
+import { Routes, Route } from "react-router-dom";
+import Home from "./Pages/Home";
+import About from "./Pages/About";
+import Navbar from "./Components/Navbar";
+import Sidebar from "./Components/Sidebar";
+import Footer from "./Components/Footer";
+import { ThemeProvider } from "./contexts/ThemeContext";
+import { SidebarProvider } from "./contexts/SidebarContext";
+import "./App.css";
+
+const App = () => {
+  return (
+    <ThemeProvider>
+      <SidebarProvider>
+        <Navbar />
+        <hr className="navbar-divider" />
+        <Sidebar />
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+        </Routes>
+        <Footer />
+      </SidebarProvider>
+    </ThemeProvider>
+  );
+};
+
+export default App;
