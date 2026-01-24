@@ -15,6 +15,7 @@ const Login = () => {
     }
   }, [isSignUp]);
 
+  
   // Detect mobile screen size
   useEffect(() => {
     const checkMobile = () => {
