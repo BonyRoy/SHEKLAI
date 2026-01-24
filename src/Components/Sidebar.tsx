@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useSidebar } from "../contexts/SidebarContext";
 import { HiX } from "react-icons/hi";
+import packageLock from "../../package-lock.json";
 import "./Sidebar.css";
 
 const Sidebar = () => {
@@ -31,6 +32,9 @@ const Sidebar = () => {
           >
             About
           </div>
+        </div>
+        <div className="sidebar-footer">
+          <div className="sidebar-version">v{packageLock.version}</div>
         </div>
       </div>
     </>
