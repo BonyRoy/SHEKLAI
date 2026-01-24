@@ -2,7 +2,6 @@
   width: 100%;
   background-color: var(--secondary-bg);
   padding: 60px 20px 40px;
-  margin-top: 80px;
 }
 
 .footer-divider {
@@ -90,7 +89,6 @@
 @media (max-width: 968px) {
   .footer-container {
     padding: 50px 20px 35px;
-    margin-top: 60px;
   }
 
   .footer-logo-text {

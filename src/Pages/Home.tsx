@@ -16,6 +16,7 @@ const Home = () => {
           padding: "20px",
         }}
       >
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center" , justifyContent: "center", padding:"40px 0px"}}>
         <h1
           style={{
             fontFamily: "Arial, Helvetica, sans-serif",
@@ -69,6 +70,7 @@ const Home = () => {
             Get Started Free
           </h3>
         </div>
+          </div>
 
         <div style={{ marginTop: "40px", paddingBottom: "40px" }}>
           <Carousel />

@@ -1,11 +1,13 @@
 import { useTheme } from "../contexts/ThemeContext";
 import { useSidebar } from "../contexts/SidebarContext";
+import { useNavigate } from "react-router-dom";
 import { FaSun, FaMoon } from "react-icons/fa";
 import "./Navbar.css";
 
 const Navbar = () => {
   const { theme, toggleTheme } = useTheme();
   const { toggleSidebar } = useSidebar();
+  const navigate = useNavigate();
 
   return (
     <>
@@ -32,6 +34,7 @@ const Navbar = () => {
             </button>
           </div>
           <button
+            onClick={() => navigate("/login")}
             style={{
               background: "linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%)",
               borderRadius: "20px",
