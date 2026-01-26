@@ -1,12 +1,46 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import login from "../../public/LOGIN.png"
 import "../Components/Pricing.css";
 import "./Login.css";
+import { useLogin } from "../services/useLogin";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
+import FullPageLoader from "../Components/FullPageLoader";
 
 const Login = () => {
+  const navigate = useNavigate();
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [uniqueId, setUniqueId] = useState("");
   const [isMobile, setIsMobile] = useState(false);
+  
+  // Password visibility states
+  const [showSignUpPassword, setShowSignUpPassword] = useState(false);
+  const [showSignInPassword, setShowSignInPassword] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  
+  // Form state for Sign Up
+  const [signUpData, setSignUpData] = useState({
+    userName: "",
+    phoneNumber: "",
+    email: "",
+    password: "",
+  });
+  
+  // Form state for Sign In
+  const [signInData, setSignInData] = useState({
+    email: "",
+    password: "",
+  });
+  
+  // Form state for Forgot Password
+  const [forgotPasswordData, setForgotPasswordData] = useState({
+    email: "",
+    sixDigitCode: "",
+    newPassword: "",
+  });
+  
+  const { signUp, signIn, changePassword, loading } = useLogin();
 
   // Generate UUID when component mounts or switches to sign up
   useEffect(() => {
@@ -47,7 +81,9 @@ const Login = () => {
     borderBottom: "1px solid #ccc",
     outline: "none",
     padding: "8px 0",
-    background: "transparent"
+    background: "transparent",
+    color: "inherit",
+    caretColor: "inherit"
   };
 
   const handleMouseEnter = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -64,9 +100,77 @@ const Login = () => {
     e.currentTarget.style.transform = "translateY(0)";
   };
 
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const result = await signUp({
+      ...signUpData,
+      uuid: uniqueId,
+    });
+    if (result) {
+      // Reset form on success
+      setSignUpData({
+        userName: "",
+        phoneNumber: "",
+        email: "",
+        password: "",
+      });
+      setIsSignUp(false);
+      setShowSignUpPassword(false);
+    }
+  };
+
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const result = await signIn(signInData);
+    if (result) {
+      // Set localStorage flag for logged in user
+      localStorage.setItem("isLoggedIn", "true");
+      // Store user data if needed
+      if (result.user) {
+        localStorage.setItem("userData", JSON.stringify(result.user));
+      }
+      // Dispatch custom event to notify other components
+      window.dispatchEvent(new Event("loginStatusChanged"));
+      // Reset form on success
+      setSignInData({
+        email: "",
+        password: "",
+      });
+      // Navigate to User Dashboard
+      navigate("/user-dashboard");
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const result = await changePassword(forgotPasswordData);
+    if (result) {
+      // Reset form on success
+      setForgotPasswordData({
+        email: "",
+        sixDigitCode: "",
+        newPassword: "",
+      });
+      setIsForgotPassword(false);
+      setShowForgotPassword(false);
+    }
+  };
+
+  const handleBackToSignIn = () => {
+    setIsForgotPassword(false);
+    setShowForgotPassword(false);
+    setForgotPasswordData({
+      email: "",
+      sixDigitCode: "",
+      newPassword: "",
+    });
+  };
+
   return (
-    <div className="login-container">
-      <div className="login-grid">
+    <>
+      <FullPageLoader isLoading={loading} />
+      <div className="login-container">
+        <div className="login-grid">
         <div style={{ display: "flex", justifyContent: "center", alignItems: "center", }}>
           <img className="login-image" src={login} alt="Login" />
         </div>        <div 
@@ -75,33 +179,117 @@ const Login = () => {
         >
           <div style={{ display: "flex", justifyContent: "flex-start", alignItems: "center" }}>
             <h1 className="ai-gradient" style={{ textAlign: "center"}}>
-              {isSignUp ? "Sign Up" : "Sign In"}
+              {isForgotPassword ? "Forgot Password" : isSignUp ? "Sign Up" : "Sign In"}
             </h1>
           </div>
           
-          {isSignUp ? (
+          {isForgotPassword ? (
+            // Forgot Password Form
+            <form onSubmit={handleForgotPassword}>
+              <input 
+                type="email" 
+                placeholder="Email" 
+                style={inputStyle}
+                value={forgotPasswordData.email}
+                onChange={(e) => setForgotPasswordData({ ...forgotPasswordData, email: e.target.value })}
+                required
+              />
+              <input 
+                type="text" 
+                placeholder="6-Digit Code" 
+                style={inputStyle}
+                value={forgotPasswordData.sixDigitCode}
+                onChange={(e) => setForgotPasswordData({ ...forgotPasswordData, sixDigitCode: e.target.value })}
+                maxLength={6}
+                pattern="[0-9]{6}"
+                required
+              />
+              <div className="password-input-wrapper">
+                <input 
+                  type={showForgotPassword ? "text" : "password"}
+                  placeholder="New Password" 
+                  style={inputStyle}
+                  value={forgotPasswordData.newPassword}
+                  onChange={(e) => setForgotPasswordData({ ...forgotPasswordData, newPassword: e.target.value })}
+                  minLength={6}
+                  required
+                />
+                <button
+                  type="button"
+                  className="password-toggle-btn"
+                  onClick={() => setShowForgotPassword(!showForgotPassword)}
+                  aria-label={showForgotPassword ? "Hide password" : "Show password"}
+                >
+                  {showForgotPassword ? <FaEye /> : <FaEyeSlash />}
+                </button>
+              </div>
+              <button 
+                type="submit" 
+                style={buttonStyle}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+                onMouseDown={handleMouseDown}
+                disabled={loading}
+              >
+                {loading ? "Changing Password..." : "Change Password"}
+              </button>
+              <p style={{ textAlign: "center", marginTop: "10px" }}>
+                Remember your password?{" "}
+                <span 
+                  className="ai-gradient" 
+                  style={{ color: "blue", cursor: "pointer", fontWeight: "bold" }}
+                  onClick={handleBackToSignIn}
+                >
+                  Sign In
+                </span>
+              </p>
+            </form>
+          ) : isSignUp ? (
             // Sign Up Form
-            <>
+            <form onSubmit={handleSignUp}>
               <input 
                 type="text" 
                 placeholder="User Name" 
                 style={inputStyle}
+                value={signUpData.userName}
+                onChange={(e) => setSignUpData({ ...signUpData, userName: e.target.value })}
+                required
               />
               <input 
                 type="tel" 
                 placeholder="Phone Number" 
                 style={inputStyle}
+                value={signUpData.phoneNumber}
+                onChange={(e) => setSignUpData({ ...signUpData, phoneNumber: e.target.value })}
+                required
               />
               <input 
                 type="email" 
                 placeholder="Email" 
                 style={inputStyle}
+                value={signUpData.email}
+                onChange={(e) => setSignUpData({ ...signUpData, email: e.target.value })}
+                required
               />
-              <input 
-                type="password" 
-                placeholder="Password" 
-                style={inputStyle}
-              />
+              <div className="password-input-wrapper">
+                <input 
+                  type={showSignUpPassword ? "text" : "password"}
+                  placeholder="Password" 
+                  style={inputStyle}
+                  value={signUpData.password}
+                  onChange={(e) => setSignUpData({ ...signUpData, password: e.target.value })}
+                  minLength={6}
+                  required
+                />
+                <button
+                  type="button"
+                  className="password-toggle-btn"
+                  onClick={() => setShowSignUpPassword(!showSignUpPassword)}
+                  aria-label={showSignUpPassword ? "Hide password" : "Show password"}
+                >
+                  {showSignUpPassword ? <FaEye /> : <FaEyeSlash />}
+                </button>
+              </div>
               <input 
                 type="hidden" 
                 value={uniqueId}
@@ -112,57 +300,94 @@ const Login = () => {
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
                 onMouseDown={handleMouseDown}
+                disabled={loading}
               >
-                Sign Up
+                {loading ? "Signing Up..." : "Sign Up"}
               </button>
-              <p style={{ textAlign: "center" }}>
+              <p style={{ textAlign: "center", marginTop: "10px" }}>
                 Already have an account?{" "}
                 <span 
                   className="ai-gradient" 
                   style={{ color: "blue", cursor: "pointer", fontWeight: "bold" }}
-                  onClick={() => setIsSignUp(false)}
+                  onClick={() => {
+                    setIsSignUp(false);
+                    setShowSignUpPassword(false);
+                  }}
                 >
                   Sign In
                 </span>
               </p>
-            </>
+            </form>
           ) : (
             // Sign In Form
-            <>
+            <form onSubmit={handleSignIn}>
               <input 
                 type="email" 
                 placeholder="Email" 
                 style={inputStyle}
+                value={signInData.email}
+                onChange={(e) => setSignInData({ ...signInData, email: e.target.value })}
+                required
               />
-              <input 
-                type="password" 
-                placeholder="Password" 
-                style={inputStyle}
-              />
+              <div className="password-input-wrapper">
+                <input 
+                  type={showSignInPassword ? "text" : "password"}
+                  placeholder="Password" 
+                  style={inputStyle}
+                  value={signInData.password}
+                  onChange={(e) => setSignInData({ ...signInData, password: e.target.value })}
+                  required
+                />
+                <button
+                  type="button"
+                  className="password-toggle-btn"
+                  onClick={() => setShowSignInPassword(!showSignInPassword)}
+                  aria-label={showSignInPassword ? "Hide password" : "Show password"}
+                >
+                  {showSignInPassword ? <FaEye /> : <FaEyeSlash />}
+                </button>
+              </div>
               <button 
                 type="submit" 
                 style={buttonStyle}
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
                 onMouseDown={handleMouseDown}
+                disabled={loading}
               >
-                Sign In
+                {loading ? "Signing In..." : "Sign In"}
               </button>
-              <p style={{ textAlign: "center" }}>
+              <p style={{ textAlign: "center", marginTop: "10px" }}>
+                <span 
+                  className="ai-gradient" 
+                  style={{ color: "blue", cursor: "pointer", fontWeight: "bold", fontSize: "0.9rem" }}
+                  onClick={() => {
+                    setIsForgotPassword(true);
+                    setShowSignInPassword(false);
+                  }}
+                >
+                  Forgot Password?
+                </span>
+              </p>
+              <p style={{ textAlign: "center", marginTop: "10px" }}>
                 Don't have an account?{" "}
                 <span 
                   className="ai-gradient" 
                   style={{ color: "blue", cursor: "pointer", fontWeight: "bold" }}
-                  onClick={() => setIsSignUp(true)}
+                  onClick={() => {
+                    setIsSignUp(true);
+                    setShowSignInPassword(false);
+                  }}
                 >
                   Sign Up
                 </span>
               </p>
-            </>
+            </form>
           )}
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 

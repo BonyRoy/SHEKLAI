@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useSidebar } from "../contexts/SidebarContext";
+import { useState, useEffect } from "react";
 import { HiX } from "react-icons/hi";
 import packageLock from "../../package-lock.json";
 import "./Sidebar.css";
@@ -7,6 +8,26 @@ import "./Sidebar.css";
 const Sidebar = () => {
   const navigate = useNavigate();
   const { isOpen, closeSidebar } = useSidebar();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    // Check localStorage on mount and when it changes
+    const checkLoginStatus = () => {
+      const loggedIn = localStorage.getItem("isLoggedIn") === "true";
+      setIsLoggedIn(loggedIn);
+    };
+
+    checkLoginStatus();
+    // Listen for storage changes (in case user logs in from another tab)
+    window.addEventListener("storage", checkLoginStatus);
+    // Also listen for custom event if login happens in same tab
+    window.addEventListener("loginStatusChanged", checkLoginStatus);
+
+    return () => {
+      window.removeEventListener("storage", checkLoginStatus);
+      window.removeEventListener("loginStatusChanged", checkLoginStatus);
+    };
+  }, []);
 
   const handleNavigate = (path: string) => {
     navigate(path);
@@ -32,6 +53,14 @@ const Sidebar = () => {
           >
             About
           </div>
+          {isLoggedIn && (
+            <div
+              className="sidebar-link"
+              onClick={() => handleNavigate("/user-dashboard")}
+            >
+              User Dashboard
+            </div>
+          )}
         </div>
         <div className="sidebar-footer">
           <div className="sidebar-version">v{packageLock.version}</div>

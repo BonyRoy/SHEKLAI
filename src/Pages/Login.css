@@ -18,11 +18,87 @@
 }
 
 .login-form-container {
-  display: grid;
-  grid-template-columns: 1fr;
+  display: flex;
+  flex-direction: column;
   width: 300px;
   gap: 10px;
   padding: 10px;
+}
+
+.login-form-container form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.password-input-wrapper input {
+  width: 100%;
+  padding-right: 35px;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  transition: color 0.2s ease;
+}
+
+.password-toggle-btn:hover {
+  color: var(--text-color);
+}
+
+.password-toggle-btn:focus {
+  outline: none;
+  color: var(--text-color);
+}
+
+.password-toggle-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.login-form-container input {
+  color: var(--text-color);
+  caret-color: var(--text-color);
+  border-bottom-color: rgba(0, 0, 0, 0.3);
+}
+
+.login-form-container input::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+[data-theme="dark"] .login-form-container input {
+  border-bottom-color: rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+  caret-color: #ffffff;
+}
+
+[data-theme="dark"] .login-form-container input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+[data-theme="dark"] .login-form-container input:focus {
+  border-bottom-color: rgba(255, 255, 255, 0.8);
+}
+
+[data-theme="light"] .login-form-container input:focus {
+  border-bottom-color: rgba(0, 0, 0, 0.6);
 }
 
 /* Mobile styles */
