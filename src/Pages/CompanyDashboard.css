@@ -1,0 +1,30 @@
+.company-dashboard {
+  padding: 40px 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.page-title {
+  color: var(--text-color);
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 32px;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.page-content {
+  color: var(--text-color);
+  font-size: 1rem;
+  line-height: 1.6;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@media (max-width: 768px) {
+  .company-dashboard {
+    padding: 24px 16px;
+  }
+  
+  .page-title {
+    font-size: 1.5rem;
+  }
+}

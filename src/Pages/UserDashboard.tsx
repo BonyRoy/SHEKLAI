@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './UserDashboard.css';
 
@@ -52,6 +52,20 @@ const DashboardCard: React.FC<DashboardCardProps> = React.memo(({ card }) => {
 DashboardCard.displayName = 'DashboardCard';
 
 const UserDashboard: React.FC = () => {
+  const [userName, setUserName] = useState<string>('');
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('userData');
+      if (stored) {
+        const user = JSON.parse(stored) as { userName?: string };
+        setUserName(user.userName ?? '');
+      }
+    } catch {
+      setUserName('');
+    }
+  }, []);
+
   const cards: DashboardCardData[] = useMemo(
     () => [
       {
@@ -105,7 +119,9 @@ const UserDashboard: React.FC = () => {
 
   return (
     <div className="user-dashboard">
-      <h1 className="dashboard-title" >User Dashboard</h1>
+      <h1 className="dashboard-title">
+        Welcome{userName ? `, ${userName}` : ''}
+      </h1>
       <div className="dashboard-cards">
         {cards.map((card) => (
           <DashboardCard key={card.id} card={card} />

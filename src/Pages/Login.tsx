@@ -32,6 +32,10 @@ const Login = () => {
     email: "",
     password: "",
   });
+  const [rememberMe, setRememberMe] = useState(false);
+
+  const REMEMBER_ME_EMAIL_KEY = "rememberMeEmail";
+  const REMEMBER_ME_PASSWORD_KEY = "rememberMePassword";
   
   // Form state for Forgot Password
   const [forgotPasswordData, setForgotPasswordData] = useState({
@@ -50,6 +54,16 @@ const Login = () => {
   }, [isSignUp]);
 
   
+  // Load remembered credentials on mount
+  useEffect(() => {
+    const savedEmail = localStorage.getItem(REMEMBER_ME_EMAIL_KEY);
+    const savedPassword = localStorage.getItem(REMEMBER_ME_PASSWORD_KEY);
+    if (savedEmail !== null && savedPassword !== null) {
+      setSignInData({ email: savedEmail, password: savedPassword });
+      setRememberMe(true);
+    }
+  }, []);
+
   // Detect mobile screen size
   useEffect(() => {
     const checkMobile = () => {
@@ -119,10 +133,28 @@ const Login = () => {
     }
   };
 
+  const handleRememberMeChange = (checked: boolean) => {
+    setRememberMe(checked);
+    if (checked) {
+      localStorage.setItem(REMEMBER_ME_EMAIL_KEY, signInData.email);
+      localStorage.setItem(REMEMBER_ME_PASSWORD_KEY, signInData.password);
+    } else {
+      localStorage.removeItem(REMEMBER_ME_EMAIL_KEY);
+      localStorage.removeItem(REMEMBER_ME_PASSWORD_KEY);
+    }
+  };
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     const result = await signIn(signInData);
     if (result) {
+      if (rememberMe) {
+        localStorage.setItem(REMEMBER_ME_EMAIL_KEY, signInData.email);
+        localStorage.setItem(REMEMBER_ME_PASSWORD_KEY, signInData.password);
+      } else {
+        localStorage.removeItem(REMEMBER_ME_EMAIL_KEY);
+        localStorage.removeItem(REMEMBER_ME_PASSWORD_KEY);
+      }
       // Set localStorage flag for logged in user
       localStorage.setItem("isLoggedIn", "true");
       // Store user data if needed
@@ -347,6 +379,28 @@ const Login = () => {
                   {showSignInPassword ? <FaEye /> : <FaEyeSlash />}
                 </button>
               </div>
+              <label
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  marginTop: "12px",
+                  marginBottom: "12px",
+                  cursor: "pointer",
+                  fontSize: "0.9rem",
+                  color: "inherit",
+                }}
+              >
+                <input
+                  type="checkbox"
+                  className="remember-me-checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => handleRememberMeChange(e.target.checked)}
+                  style={{ width: 18, height: 18, cursor: "pointer", accentColor: "#3b82f6" }}
+                  aria-label="Remember me"
+                />
+                Remember me
+              </label>
               <button 
                 type="submit" 
                 style={buttonStyle}
