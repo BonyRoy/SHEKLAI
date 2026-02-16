@@ -4,6 +4,7 @@ import About from "./Pages/About";
 import Login from "./Pages/Login";
 import UserDashboard from "./Pages/UserDashboard";
 import CompanyDashboard from "./Pages/CompanyDashboard";
+import OrganizationsManagement from "./Pages/OrganizationsManagement";
 import ThirteenWeekForecast from "./Pages/ThirteenWeekForecast";
 import Categories from "./Pages/Categories";
 import Transactions from "./Pages/Transactions";
@@ -30,6 +31,7 @@ const App = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/user-dashboard" element={<UserDashboard />} />
           <Route path="/company-dashboard" element={<CompanyDashboard />} />
+          <Route path="/organizations-management" element={<OrganizationsManagement />} />
           <Route path="/13-week-forecast" element={<ThirteenWeekForecast />} />
           <Route path="/categories" element={<Categories />} />
           <Route path="/transactions" element={<Transactions />} />
