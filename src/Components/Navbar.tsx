@@ -121,19 +121,8 @@ const Navbar = () => {
             </div>
           ) : (
             <button
+              className="navbar-signin-btn"
               onClick={() => navigate("/login")}
-              style={{
-                background: "linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%)",
-                borderRadius: "20px",
-                padding: "8px 16px",
-                color: "white",
-                border: "none",
-                cursor: "pointer",
-                width: "100%",
-                minWidth: "100px",
-                fontWeight: "bolder",
-                height: "40px",
-              }}
             >
               Sign In
             </button>

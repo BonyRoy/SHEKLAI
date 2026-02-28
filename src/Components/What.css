@@ -1,76 +1,76 @@
 .what-container {
-  padding: 80px 20px;
+  padding: 80px 24px;
   max-width: 1200px;
   margin: 0 auto;
-  background-color: var(--secondary-bg);
 }
 
 .what-header {
   text-align: center;
-  margin-bottom: 50px;
+  margin-bottom: 48px;
 }
 
 .what-title {
-  font-size: 2.5rem;
-  font-weight: bold;
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 800;
   color: var(--text-title);
-  margin-bottom: 16px;
-  font-family: Arial, Helvetica, sans-serif;
+  margin-bottom: 12px;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: -1px;
+  line-height: 1.2;
 }
 
 .what-subtitle {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   color: var(--text-secondary);
   margin: 0;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Inter', sans-serif;
+  line-height: 1.6;
 }
 
 .what-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 30px;
+  gap: 24px;
 }
 
 .what-card {
   background: var(--card-bg);
   border-radius: 12px;
-  padding: 40px 30px;
+  padding: 36px 28px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-[data-theme="dark"] .what-card {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-color);
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-sm);
 }
 
 .what-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary);
 }
 
 [data-theme="dark"] .what-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  border-color: var(--primary);
 }
 
 .what-icon-wrapper {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .integration-icon {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 40px;
+  font-size: 28px;
 }
 
 .integration-icon.quickbooks {
@@ -79,28 +79,28 @@
 }
 
 .integration-icon.plaid {
-  background-color: #000000;
-  border-radius: 16px;
-  padding: 20px;
+  background-color: #111827;
+  border-radius: 14px;
+  padding: 16px;
 }
 
 .integration-icon.csv {
-  background-color: #3b82f6;
+  background-color: var(--primary);
   color: white;
 }
 
 .qb-text {
-  font-size: 2rem;
-  font-weight: bold;
+  font-size: 1.5rem;
+  font-weight: 700;
   color: white;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Inter', sans-serif;
   letter-spacing: -1px;
 }
 
 .plaid-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 4px;
+  gap: 3px;
   width: 100%;
   height: 100%;
 }
@@ -111,65 +111,51 @@
 }
 
 .what-card-title {
-  font-size: 1.3rem;
-  font-weight: bold;
+  font-size: 1.1rem;
+  font-weight: 700;
   color: var(--text-title);
-  margin-bottom: 12px;
-  font-family: Arial, Helvetica, sans-serif;
+  margin-bottom: 8px;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: -0.3px;
 }
 
 .what-card-description {
-  font-size: 1rem;
+  font-size: 0.925rem;
   color: var(--text-secondary);
   margin: 0;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Inter', sans-serif;
+  line-height: 1.5;
 }
 
-/* Tablet - 2 columns */
+/* Tablet */
 @media (max-width: 968px) {
   .what-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-
-  .what-title {
-    font-size: 2rem;
-  }
 }
 
-/* Mobile - 1 column */
+/* Mobile */
 @media (max-width: 640px) {
   .what-container {
-    padding: 60px 16px;
-  }
-
-  .what-title {
-    font-size: 1.75rem;
-  }
-
-  .what-subtitle {
-    font-size: 1rem;
+    padding: 48px 16px;
   }
 
   .what-grid {
     grid-template-columns: 1fr;
-    gap: 24px;
+    gap: 16px;
   }
 
   .what-card {
-    padding: 32px 24px;
+    padding: 28px 20px;
   }
 
   .integration-icon {
-    width: 70px;
-    height: 70px;
-    font-size: 36px;
+    width: 56px;
+    height: 56px;
+    font-size: 24px;
   }
 
   .qb-text {
-    font-size: 1.75rem;
-  }
-
-  .what-card-title {
-    font-size: 1.2rem;
+    font-size: 1.25rem;
   }
 }

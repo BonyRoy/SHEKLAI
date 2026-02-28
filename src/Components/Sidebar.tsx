@@ -3,7 +3,7 @@ import { useSidebar } from "../contexts/SidebarContext";
 import { useTheme } from "../contexts/ThemeContext";
 import { useState, useEffect } from "react";
 import { HiX } from "react-icons/hi";
-import { FaHome, FaInfoCircle, FaUser, FaBuilding, FaChartLine, FaTags, FaExchangeAlt, FaPlug, FaSun, FaMoon, FaSignInAlt, FaSignOutAlt } from "react-icons/fa";
+import { FaHome, FaInfoCircle, FaUser, FaBuilding, FaTags, FaExchangeAlt, FaPlug, FaChartPie, FaMoneyBillWave, FaSun, FaMoon, FaSignInAlt, FaSignOutAlt } from "react-icons/fa";
 import Modal from "./Modal";
 import packageLock from "../../package-lock.json";
 import "./Sidebar.css";
@@ -92,13 +92,6 @@ const Sidebar = () => {
               </div>
               <div
                 className="sidebar-link"
-                onClick={() => handleNavigate("/13-week-forecast")}
-              >
-                <FaChartLine className="sidebar-icon" />
-                <span>13-Week Forecast</span>
-              </div>
-              <div
-                className="sidebar-link"
                 onClick={() => handleNavigate("/categories")}
               >
                 <FaTags className="sidebar-icon" />
@@ -117,6 +110,20 @@ const Sidebar = () => {
               >
                 <FaPlug className="sidebar-icon" />
                 <span>Connect Data</span>
+              </div>
+              <div
+                className="sidebar-link"
+                onClick={() => handleNavigate("/classification-results")}
+              >
+                <FaChartPie className="sidebar-icon" />
+                <span>Classification results</span>
+              </div>
+              <div
+                className="sidebar-link"
+                onClick={() => handleNavigate("/cash-flow")}
+              >
+                <FaMoneyBillWave className="sidebar-icon" />
+                <span>Cash Flow</span>
               </div>
             </>
           )}

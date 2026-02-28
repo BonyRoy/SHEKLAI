@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shekl.AI — Data Flow &amp; Architecture Report</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #242836;
+    --border: #2e3348;
+    --accent: #6c63ff;
+    --accent2: #00d4aa;
+    --accent3: #ff6b6b;
+    --accent4: #ffc107;
+    --text: #e4e6f0;
+    --muted: #8b8fa3;
+    --income: #00d4aa;
+    --expense: #ff6b6b;
+    --transfer: #6c63ff;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    padding: 0;
+  }
+  .hero {
+    background: linear-gradient(135deg, #1a1d27 0%, #2a1f4e 50%, #1a1d27 100%);
+    padding: 60px 40px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+  .hero h1 {
+    font-size: 2.8rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 12px;
+  }
+  .hero p { color: var(--muted); font-size: 1.15rem; max-width: 700px; margin: 0 auto; }
+  .container { max-width: 1200px; margin: 0 auto; padding: 40px 24px; }
+  .toc {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 32px;
+    margin-bottom: 48px;
+  }
+  .toc h2 { font-size: 1.3rem; margin-bottom: 16px; color: var(--accent); }
+  .toc ol { padding-left: 20px; }
+  .toc li { margin-bottom: 8px; }
+  .toc a { color: var(--accent2); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+
+  section { margin-bottom: 56px; }
+  h2 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--accent);
+    display: inline-block;
+  }
+  h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 24px 0 12px;
+    color: var(--accent2);
+  }
+  h4 { font-size: 1.05rem; margin: 16px 0 8px; color: var(--accent4); }
+  p, li { color: var(--text); }
+  ul, ol { padding-left: 20px; margin-bottom: 12px; }
+  li { margin-bottom: 4px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px 28px;
+    margin-bottom: 20px;
+  }
+  .card.highlight { border-left: 4px solid var(--accent); }
+  .card.green { border-left: 4px solid var(--accent2); }
+  .card.red { border-left: 4px solid var(--accent3); }
+  .card.yellow { border-left: 4px solid var(--accent4); }
+
+  .flow-diagram {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px;
+    margin: 24px 0;
+    overflow-x: auto;
+    font-family: 'Cascadia Code', 'Fira Code', monospace;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    white-space: pre;
+    color: var(--muted);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 0.9rem;
+  }
+  th {
+    background: var(--surface2);
+    color: var(--accent);
+    padding: 12px 14px;
+    text-align: left;
+    border: 1px solid var(--border);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  td {
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    vertical-align: top;
+  }
+  tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
+  code {
+    background: var(--surface2);
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-family: 'Cascadia Code', 'Fira Code', monospace;
+    font-size: 0.88em;
+    color: var(--accent2);
+  }
+  .badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    margin-right: 6px;
+  }
+  .badge.plaid { background: #1a3a2a; color: #00d4aa; }
+  .badge.stripe { background: #3a2a1a; color: #ffc107; }
+  .badge.upload { background: #2a1a3a; color: #6c63ff; }
+  .badge.income { background: #1a3a2a; color: var(--income); }
+  .badge.expense { background: #3a1a1a; color: var(--expense); }
+  .badge.transfer { background: #1a1a3a; color: var(--transfer); }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+  @media (max-width: 900px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+
+  .step-flow { display: flex; align-items: stretch; gap: 0; margin: 24px 0; flex-wrap: wrap; }
+  .step {
+    flex: 1;
+    min-width: 160px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 16px 14px;
+    text-align: center;
+    position: relative;
+  }
+  .step:first-child { border-radius: 12px 0 0 12px; }
+  .step:last-child { border-radius: 0 12px 12px 0; }
+  .step .num {
+    display: inline-block;
+    width: 28px; height: 28px;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 50%;
+    font-size: 0.85rem;
+    line-height: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .step .label { font-size: 0.85rem; font-weight: 600; display: block; }
+  .step .desc { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+  .arrow {
+    display: flex;
+    align-items: center;
+    font-size: 1.5rem;
+    color: var(--accent);
+    padding: 0 4px;
+  }
+  .file-ref { color: var(--accent4); font-size: 0.82rem; font-family: monospace; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>Shekl.AI — Data Flow Report</h1>
+  <p>End-to-end architecture: from raw bank data to interactive cash flow forecasting</p>
+</div>
+
+<div class="container">
+
+<!-- TABLE OF CONTENTS -->
+<div class="toc">
+  <h2>Table of Contents</h2>
+  <ol>
+    <li><a href="#overview">High-Level Overview</a></li>
+    <li><a href="#ingestion">Data Ingestion (3 Sources)</a></li>
+    <li><a href="#ledger">Unified Ledger Database (Schema)</a></li>
+    <li><a href="#classification">Classification &amp; Normalization Pipeline</a></li>
+    <li><a href="#cashflow">Cash Flow Model Generation</a></li>
+    <li><a href="#forecasting">Forecasting Pipeline</a></li>
+    <li><a href="#standardized">Standardized Cash Flow DB</a></li>
+    <li><a href="#frontend">Frontend Display Flow</a></li>
+    <li><a href="#files">Key File Reference</a></li>
+  </ol>
+</div>
+
+<!-- SECTION 1: OVERVIEW -->
+<section id="overview">
+  <h2>1. High-Level Overview</h2>
+  <p>Shekl.AI processes financial transaction data from three sources, normalizes and classifies it using AI, then generates interactive cash flow views with forecasting capabilities.</p>
+
+  <div class="flow-diagram">
+┌──────────────────────────────────────────────────────────────────────────────────────┐
+│                              DATA INGESTION LAYER                                     │
+│                                                                                       │
+│   ┌─────────────┐    ┌─────────────┐    ┌───────────────────┐                        │
+│   │  Plaid API   │    │ Stripe API  │    │  CSV / XLS Upload │                        │
+│   │  (Banks)     │    │ (Payments)  │    │  (Manual Files)   │                        │
+│   └──────┬──────┘    └──────┬──────┘    └────────┬──────────┘                        │
+│          │                  │                     │                                    │
+│          ▼                  ▼                     ▼                                    │
+│   plaid_transactions  stripe_transactions   smart_reader.py                           │
+│        .csv                .csv            (auto-detect cols)                          │
+└──────────┬──────────────────┬─────────────────────┬──────────────────────────────────┘
+           │                  │                     │
+           ▼                  ▼                     ▼
+    ┌──────────────────────────────────────────────────────┐
+    │              UNIFIED LEDGER (SQLite)                   │
+    │                  ledger.db                              │
+    │                                                        │
+    │   accounts │ transactions │ categories │ override_rules │
+    │   dimension_defs │ transaction_dimensions               │
+    │   classification_history                                │
+    └────────────────────────┬─────────────────────────────┘
+                             │
+                             ▼
+    ┌──────────────────────────────────────────────────────┐
+    │           CLASSIFICATION PIPELINE                      │
+    │                                                        │
+    │   ┌─────────────────┐    ┌───────────────────────┐    │
+    │   │  Normalizer      │    │  Incremental Classifier│    │
+    │   │  (Opus 4.5 Agent)│    │  (Clustering + LLM)   │    │
+    │   └─────────────────┘    └───────────────────────┘    │
+    └────────────────────────┬─────────────────────────────┘
+                             │
+                             ▼
+    ┌──────────────────────────────────────────────────────┐
+    │           CASH FLOW GENERATION                         │
+    │                                                        │
+    │   Aggregates by category × period (weekly/monthly)     │
+    │   Returns JSON model with credits/debits per period    │
+    └────────────────────────┬─────────────────────────────┘
+                             │
+                             ▼
+    ┌──────────────────────────────────────────────────────┐
+    │           FORECASTING ENGINE                           │
+    │                                                        │
+    │   12 built-in algorithms + custom agent-written algos  │
+    │   Extends time-series with projected periods           │
+    │   Confidence bands for advanced algorithms              │
+    └────────────────────────┬─────────────────────────────┘
+                             │
+                             ▼
+    ┌──────────────────────────────────────────────────────┐
+    │           FRONTEND (React + Recharts)                   │
+    │                                                        │
+    │   CashFlow.tsx  │  ThirteenWeekForecast.tsx            │
+    │   Editable grid │  Forecasting dashboard               │
+    └──────────────────────────────────────────────────────┘</div>
+</section>
+
+<!-- SECTION 2: INGESTION -->
+<section id="ingestion">
+  <h2>2. Data Ingestion (3 Sources)</h2>
+
+  <div class="grid3">
+    <div class="card green">
+      <h3><span class="badge plaid">PLAID</span> Bank Connections</h3>
+      <p><strong>Endpoint:</strong> <code>POST /api/plaid/exchange-token</code></p>
+      <p><strong>Sync:</strong> <code>POST /api/plaid/sync-transactions</code></p>
+      <h4>Flow:</h4>
+      <ol>
+        <li>User connects via Plaid Link popup</li>
+        <li>Exchange public_token → access_token</li>
+        <li>Fetch accounts &amp; balances, store in <code>plaid_connections.json</code></li>
+        <li>Sync transactions via Plaid Transactions Sync API (cursor-based)</li>
+        <li>Normalize to CSV → <code>plaid_transactions.csv</code></li>
+        <li>Call <code>ingest_plaid()</code> → insert into ledger</li>
+      </ol>
+      <h4>Dedup Key:</h4>
+      <p><code>plaid_{transaction_id}</code></p>
+      <p class="file-ref">routes/plaid_routes.py · agent/ledger.py:1421-1494</p>
+    </div>
+
+    <div class="card yellow">
+      <h3><span class="badge stripe">STRIPE</span> Payment Data</h3>
+      <p><strong>Endpoint:</strong> <code>POST /api/stripe/connect</code></p>
+      <p><strong>Sync:</strong> <code>POST /api/stripe/sync-transactions</code></p>
+      <h4>Flow:</h4>
+      <ol>
+        <li>User provides Stripe API key</li>
+        <li>Validate key, fetch account info</li>
+        <li>Store connection in <code>stripe_connection.json</code></li>
+        <li>Fetch BalanceTransaction objects</li>
+        <li>Normalize to CSV → <code>stripe_transactions.csv</code></li>
+        <li>Call <code>ingest_stripe()</code> → insert into ledger</li>
+      </ol>
+      <h4>Dedup Key:</h4>
+      <p><code>stripe_{transaction_id}</code></p>
+      <p class="file-ref">routes/stripe_routes.py · agent/ledger.py:1497-1547</p>
+    </div>
+
+    <div class="card highlight">
+      <h3><span class="badge upload">UPLOAD</span> Manual Files</h3>
+      <p><strong>Endpoint:</strong> <code>POST /api/upload</code></p>
+      <h4>Flow:</h4>
+      <ol>
+        <li>User uploads CSV, XLS, XLSX, TSV, or Parquet</li>
+        <li>File saved to <code>data/{user_id}/{filename}</code></li>
+        <li><code>smart_reader.py</code> auto-detects columns (date, description, amount)</li>
+        <li>Handles debit/credit column synthesis</li>
+        <li>Creates account: <code>upload_{hash}</code></li>
+        <li>Call <code>ingest_upload()</code> → insert into ledger</li>
+      </ol>
+      <h4>Dedup Key:</h4>
+      <p><code>upload_{sha256(file|row|date|desc|amt)}</code></p>
+      <p class="file-ref">routes/agent_routes.py:870-941 · agent/smart_reader.py</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Smart Reader — Column Resolution</h3>
+    <p>The <code>smart_reader.py</code> module handles diverse file formats:</p>
+    <ul>
+      <li><strong>Excel files:</strong> Auto-finds header row, drops empty rows/columns</li>
+      <li><strong>CSV files:</strong> Standard DictReader with encoding detection</li>
+      <li><strong>Column mapping:</strong> Fuzzy-matches columns for Date, Description, Amount</li>
+      <li><strong>Debit/Credit synthesis:</strong> Combines separate Debit and Credit columns into a signed Amount</li>
+      <li><strong>Flexible dates:</strong> Handles multiple date formats via <code>_parse_flex_date()</code></li>
+    </ul>
+  </div>
+</section>
+
+<!-- SECTION 3: LEDGER SCHEMA -->
+<section id="ledger">
+  <h2>3. Unified Ledger Database</h2>
+  <p>Location: <code>data/{user_id}/ledger/ledger.db</code> (SQLite)</p>
+  <p>This is the <strong>single source of truth</strong> for all transaction data, regardless of source.</p>
+
+  <h3>Table: <code>accounts</code></h3>
+  <p>Stores connected financial accounts from all sources.</p>
+  <table>
+    <tr><th>Column</th><th>Type</th><th>Constraints</th><th>Description</th></tr>
+    <tr><td><code>id</code></td><td>TEXT</td><td>PRIMARY KEY</td><td>Account ID (e.g., <code>plaid_3odN8Pb...</code>, <code>upload_hdfc_2018</code>)</td></tr>
+    <tr><td><code>source_type</code></td><td>TEXT</td><td>NOT NULL</td><td><span class="badge plaid">plaid</span> <span class="badge stripe">stripe</span> <span class="badge upload">upload</span></td></tr>
+    <tr><td><code>source_name</code></td><td>TEXT</td><td></td><td>Institution name (e.g., "Chase", "HDFC Bank")</td></tr>
+    <tr><td><code>display_name</code></td><td>TEXT</td><td>NOT NULL</td><td>Human-readable name (e.g., "Checking ····0000")</td></tr>
+    <tr><td><code>account_type</code></td><td>TEXT</td><td></td><td>checking, savings, credit_card, payment</td></tr>
+    <tr><td><code>currency</code></td><td>TEXT</td><td>DEFAULT 'USD'</td><td>ISO currency code</td></tr>
+    <tr><td><code>metadata_json</code></td><td>TEXT</td><td></td><td>Extra info (mask, balance, institution_id) as JSON</td></tr>
+    <tr><td><code>created_at</code></td><td>TEXT</td><td>NOT NULL</td><td>ISO timestamp</td></tr>
+    <tr><td><code>last_synced</code></td><td>TEXT</td><td></td><td>Last sync timestamp</td></tr>
+  </table>
+
+  <h3>Table: <code>transactions</code></h3>
+  <p>All transactions from every source, deduplicated by primary key.</p>
+  <table>
+    <tr><th>Column</th><th>Type</th><th>Constraints</th><th>Description</th></tr>
+    <tr><td><code>id</code></td><td>TEXT</td><td>PRIMARY KEY</td><td>Deduplication key (source-specific hash)</td></tr>
+    <tr><td><code>account_id</code></td><td>TEXT</td><td>NOT NULL, FK → accounts</td><td>References the source account</td></tr>
+    <tr><td><code>description</code></td><td>TEXT</td><td>NOT NULL</td><td>Transaction description / memo</td></tr>
+    <tr><td><code>amount</code></td><td>REAL</td><td>NOT NULL</td><td>Signed: positive = inflow, negative = outflow</td></tr>
+    <tr><td><code>txn_date</code></td><td>TEXT</td><td>NOT NULL</td><td>Transaction date (YYYY-MM-DD)</td></tr>
+    <tr><td><code>currency</code></td><td>TEXT</td><td>DEFAULT 'USD'</td><td>Currency code</td></tr>
+    <tr><td><code>raw_category</code></td><td>TEXT</td><td></td><td>Original category from source (Plaid/Stripe)</td></tr>
+    <tr><td><code>extra_json</code></td><td>TEXT</td><td></td><td>Source-specific fields as JSON</td></tr>
+    <tr><td><code>ingested_at</code></td><td>TEXT</td><td>NOT NULL</td><td>When the row was ingested</td></tr>
+    <tr><td><code>category_id</code></td><td>INTEGER</td><td>FK → categories</td><td>Assigned category (after classification)</td></tr>
+    <tr><td><code>cluster_id</code></td><td>TEXT</td><td></td><td>Cluster group for similar transactions</td></tr>
+    <tr><td><code>week_index</code></td><td>INTEGER</td><td></td><td>ISO calendar week index</td></tr>
+    <tr><td><code>normalized_description</code></td><td>TEXT</td><td></td><td>Cleaned description (IDs/refs stripped)</td></tr>
+    <tr><td><code>confidence</code></td><td>REAL</td><td></td><td>Classification confidence (0.0 – 1.0)</td></tr>
+    <tr><td><code>classification_source</code></td><td>TEXT</td><td></td><td>normalizer, llm, cache, override, user, correction</td></tr>
+  </table>
+  <p><strong>Indexes:</strong> <code>idx_txn_account</code>, <code>idx_txn_date</code>, <code>idx_txn_category</code>, <code>idx_txn_week</code></p>
+
+  <h3>Table: <code>categories</code></h3>
+  <p>Stable category registry — IDs are never reassigned.</p>
+  <table>
+    <tr><th>Column</th><th>Type</th><th>Constraints</th><th>Description</th></tr>
+    <tr><td><code>id</code></td><td>INTEGER</td><td>PRIMARY KEY AUTOINCREMENT</td><td>Stable category ID</td></tr>
+    <tr><td><code>name</code></td><td>TEXT</td><td>NOT NULL UNIQUE</td><td>Category name (e.g., "Food & Dining")</td></tr>
+    <tr><td><code>type</code></td><td>TEXT</td><td>DEFAULT 'expense'</td><td><span class="badge income">income</span> <span class="badge expense">expense</span> <span class="badge transfer">transfer</span></td></tr>
+    <tr><td><code>source</code></td><td>TEXT</td><td>DEFAULT 'system'</td><td>system, user, llm, normalizer</td></tr>
+    <tr><td><code>active</code></td><td>INTEGER</td><td>DEFAULT 1</td><td>Active flag (1/0)</td></tr>
+    <tr><td><code>created_at</code></td><td>TEXT</td><td>NOT NULL</td><td>Creation timestamp</td></tr>
+  </table>
+
+  <h3>Table: <code>override_rules</code></h3>
+  <p>User-defined rules applied <em>before</em> ML clustering for precise control.</p>
+  <table>
+    <tr><th>Column</th><th>Type</th><th>Constraints</th><th>Description</th></tr>
+    <tr><td><code>id</code></td><td>TEXT</td><td>PRIMARY KEY</td><td>UUID</td></tr>
+    <tr><td><code>match_text</code></td><td>TEXT</td><td>NOT NULL</td><td>Text to match in description</td></tr>
+    <tr><td><code>match_type</code></td><td>TEXT</td><td>DEFAULT 'contains'</td><td>contains, exact, starts_with, regex</td></tr>
+    <tr><td><code>account_id</code></td><td>TEXT</td><td></td><td>Filter by account (NULL = all)</td></tr>
+    <tr><td><code>amount_min / amount_max</code></td><td>REAL</td><td></td><td>Amount range filter</td></tr>
+    <tr><td><code>category</code></td><td>TEXT</td><td>NOT NULL</td><td>Category to assign</td></tr>
+    <tr><td><code>dimensions</code></td><td>TEXT</td><td></td><td>Dimension values (JSON)</td></tr>
+    <tr><td><code>priority</code></td><td>INTEGER</td><td>DEFAULT 0</td><td>Higher = applied first</td></tr>
+    <tr><td><code>source</code></td><td>TEXT</td><td>DEFAULT 'user'</td><td>user, correction</td></tr>
+    <tr><td><code>created_at</code></td><td>TEXT</td><td>NOT NULL</td><td>Timestamp</td></tr>
+  </table>
+
+  <h3>Table: <code>classification_history</code></h3>
+  <p>Audit trail tracking every category change for compliance.</p>
+  <table>
+    <tr><th>Column</th><th>Type</th><th>Description</th></tr>
+    <tr><td><code>id</code></td><td>INTEGER PK</td><td>Auto-incrementing ID</td></tr>
+    <tr><td><code>txn_id</code></td><td>TEXT</td><td>Transaction ID</td></tr>
+    <tr><td><code>old_category_id / new_category_id</code></td><td>INTEGER</td><td>Previous and new category</td></tr>
+    <tr><td><code>old_source / new_source</code></td><td>TEXT</td><td>Previous and new classification source</td></tr>
+    <tr><td><code>reason</code></td><td>TEXT</td><td>Reason for change</td></tr>
+    <tr><td><code>changed_at</code></td><td>TEXT</td><td>Timestamp</td></tr>
+  </table>
+
+  <h3>Table: <code>dimension_defs</code></h3>
+  <p>User-defined dimension hierarchies (e.g., Region, Department).</p>
+  <table>
+    <tr><th>Column</th><th>Type</th><th>Description</th></tr>
+    <tr><td><code>id</code></td><td>TEXT PK</td><td>UUID</td></tr>
+    <tr><td><code>name</code></td><td>TEXT</td><td>Dimension name (e.g., "Region")</td></tr>
+    <tr><td><code>level</code></td><td>INTEGER</td><td>Hierarchy level (0 = top)</td></tr>
+    <tr><td><code>allowed_values</code></td><td>TEXT</td><td>JSON array of valid values</td></tr>
+    <tr><td><code>default_value</code></td><td>TEXT</td><td>Fallback value</td></tr>
+    <tr><td><code>prompt</code></td><td>TEXT</td><td>LLM prompt for extraction</td></tr>
+    <tr><td><code>created_at</code></td><td>TEXT</td><td>Timestamp</td></tr>
+  </table>
+
+  <h3>Table: <code>transaction_dimensions</code></h3>
+  <p>Assigned dimension values per transaction (many-to-many).</p>
+  <table>
+    <tr><th>Column</th><th>Type</th><th>Description</th></tr>
+    <tr><td><code>txn_id</code></td><td>TEXT FK → transactions</td><td>Transaction ID</td></tr>
+    <tr><td><code>dimension_id</code></td><td>TEXT FK → dimension_defs</td><td>Dimension definition</td></tr>
+    <tr><td><code>value</code></td><td>TEXT</td><td>Assigned value (e.g., "North America")</td></tr>
+    <tr><td><code>source</code></td><td>TEXT</td><td>llm, default, user</td></tr>
+  </table>
+  <p><strong>PK:</strong> <code>(txn_id, dimension_id)</code></p>
+
+  <h3>Entity Relationship Diagram</h3>
+  <div class="flow-diagram">
+  accounts (1) ─────────────────┬──────────── (many) transactions
+                                │
+  categories (1) ───────────────┤
+                                │
+  transactions (1) ─────────────┼──────────── (many) transaction_dimensions
+                                │
+  dimension_defs (1) ───────────┘──────────── (many) transaction_dimensions
+                                
+  transactions (1) ─────────────────────────── (many) classification_history
+  
+  override_rules ── applied programmatically during classification</div>
+</section>
+
+<!-- SECTION 4: CLASSIFICATION -->
+<section id="classification">
+  <h2>4. Classification &amp; Normalization Pipeline</h2>
+  <p>Two complementary approaches to categorize transactions:</p>
+
+  <div class="grid2">
+    <div class="card green">
+      <h3>Approach A: Normalizer Agent</h3>
+      <p><strong>Model:</strong> Claude Opus 4.5 with Jupyter kernel</p>
+      <p><strong>Endpoint:</strong> <code>POST /api/ledger/normalize-and-classify</code></p>
+      <h4>How it works:</h4>
+      <ol>
+        <li><strong>Sample prep</strong> — Builds markdown tables of sample rows from each account (20 random + top-10 frequent)</li>
+        <li><strong>Agent execution</strong> — Opus reads ALL transactions from <code>ledger.db</code> via Python code</li>
+        <li><strong>Classification</strong> — Agent assigns categories, builds cluster mappings, updates DB directly</li>
+        <li><strong>Registry sync</strong> — Remaps agent's sequential IDs to stable registry IDs</li>
+      </ol>
+      <h4>Characteristics:</h4>
+      <ul>
+        <li>"Black box" — agent writes and executes Python autonomously</li>
+        <li>Default confidence: <strong>0.8</strong></li>
+        <li>Source: <code>normalizer</code></li>
+        <li>Outputs: <code>cluster_cache.json</code>, <code>suggested_categories.json</code></li>
+      </ul>
+      <p class="file-ref">agent/normalizer.py:217-346</p>
+    </div>
+
+    <div class="card highlight">
+      <h3>Approach B: Incremental Classifier</h3>
+      <p><strong>Models:</strong> TF-IDF + Agglomerative Clustering + LLM</p>
+      <p><strong>Endpoint:</strong> <code>POST /api/ledger/classify</code></p>
+      <h4>Pipeline steps:</h4>
+      <ol>
+        <li><strong>Override rules</strong> — Apply user rules first (confidence: 1.0)</li>
+        <li><strong>Clustering</strong> — TF-IDF vectorization + agglomerative clustering (cosine, threshold=0.4)</li>
+        <li><strong>Cache lookup</strong> — Check <code>cluster_cache.json</code> for known clusters (confidence: 0.95)</li>
+        <li><strong>LLM classification</strong> — Only NEW representatives sent to LLM (confidence: 0.7)</li>
+        <li><strong>Consolidation</strong> — Normalize inconsistent category names</li>
+        <li><strong>Write-back</strong> — Update transactions + log to history</li>
+      </ol>
+      <p class="file-ref">agent/classifier.py:505-684 · agent/clustering.py</p>
+    </div>
+  </div>
+
+  <h3>Clustering Detail (The "Black Box" Efficiency)</h3>
+  <div class="card">
+    <p>The key insight: instead of classifying 50,000 transactions individually, the system <strong>groups similar transactions</strong> first:</p>
+    <div class="step-flow">
+      <div class="step"><span class="num">1</span><span class="label">Normalize</span><span class="desc">Strip IDs, refs, numbers via regex<br/>"ZOOM.US #CO ID:704..." → "ZOOM.US"</span></div>
+      <div class="arrow">→</div>
+      <div class="step"><span class="num">2</span><span class="label">TF-IDF</span><span class="desc">Convert text to numerical vectors</span></div>
+      <div class="arrow">→</div>
+      <div class="step"><span class="num">3</span><span class="label">Cluster</span><span class="desc">Group by cosine similarity<br/>(threshold: 0.4)</span></div>
+      <div class="arrow">→</div>
+      <div class="step"><span class="num">4</span><span class="label">Pick Rep</span><span class="desc">Select representative closest to centroid</span></div>
+      <div class="arrow">→</div>
+      <div class="step"><span class="num">5</span><span class="label">LLM</span><span class="desc">Classify only unique representatives<br/>(e.g., "ZOOM" once, not 32 times)</span></div>
+    </div>
+    <p><strong>Result:</strong> 50,000 transactions → ~43,000 cluster representatives → only new/unknown ones sent to the LLM. Massive cost savings.</p>
+  </div>
+
+  <h3>Post-Classification: Dimension Extraction</h3>
+  <div class="card">
+    <p>After classification, optional <strong>dimensions</strong> (e.g., Region, Department) are extracted:</p>
+    <ul>
+      <li>Cluster representatives are sent in batches to the LLM</li>
+      <li>LLM extracts dimension values per cluster</li>
+      <li>Values propagated to all transactions in the cluster</li>
+      <li>Stored in <code>transaction_dimensions</code> table</li>
+    </ul>
+    <p class="file-ref">agent/dimensions.py</p>
+  </div>
+</section>
+
+<!-- SECTION 5: CASH FLOW -->
+<section id="cashflow">
+  <h2>5. Cash Flow Model Generation</h2>
+  <p><strong>Endpoint:</strong> <code>GET /api/ledger/cash-flow</code></p>
+  <p class="file-ref">agent/ledger.py:1095-1379 · routes/ledger_routes.py:164-194</p>
+
+  <h3>Generation Process</h3>
+  <div class="step-flow">
+    <div class="step"><span class="num">1</span><span class="label">Date Range</span><span class="desc">Find min/max dates from transactions</span></div>
+    <div class="arrow">→</div>
+    <div class="step"><span class="num">2</span><span class="label">Periods</span><span class="desc">Compute weekly / biweekly / monthly buckets</span></div>
+    <div class="arrow">→</div>
+    <div class="step"><span class="num">3</span><span class="label">Aggregate</span><span class="desc">Group by category × period, sum credits/debits</span></div>
+    <div class="arrow">→</div>
+    <div class="step"><span class="num">4</span><span class="label">Clusters</span><span class="desc">Build vendor-level breakdowns per category</span></div>
+    <div class="arrow">→</div>
+    <div class="step"><span class="num">5</span><span class="label">JSON</span><span class="desc">Return structured model to frontend</span></div>
+  </div>
+
+  <h3>Period Calculation</h3>
+  <div class="card">
+    <table>
+      <tr><th>Period Type</th><th>Alignment</th><th>Label Format</th><th>Example</th></tr>
+      <tr><td><strong>Weekly</strong></td><td>Aligned to Monday</td><td>"Wk N (Mon DD)"</td><td>Wk 1 (Jan 06)</td></tr>
+      <tr><td><strong>Biweekly</strong></td><td>14-day periods from Monday</td><td>"P1 (Jan 06–Jan 19)"</td><td>P3 (Feb 03–Feb 16)</td></tr>
+      <tr><td><strong>Monthly</strong></td><td>Calendar months</td><td>"Mon YYYY"</td><td>Jan 2025</td></tr>
+    </table>
+  </div>
+
+  <h3>Output JSON Structure</h3>
+  <div class="flow-diagram">{
+  "schema_version": "2.1",
+  "metadata": {
+    "total_descriptions": 50042,
+    "period": "weekly",
+    "num_periods": 52,
+    "period_labels": ["Wk 1 (Jan 06)", "Wk 2 (Jan 13)", ...],
+    "first_date": "2025-01-01",
+    "last_date": "2025-12-31"
+  },
+  "category_summary": {
+    "Revenue / Customer Receipts": {
+      "count": 16416,
+      "credits": 450000000.00,       // total inflows
+      "debits": 0.00,                // total outflows
+      "weekly_credits": [8654321.00, 9123456.00, ...],  // per-period arrays
+      "weekly_debits":  [0.00, 0.00, ...]
+    },
+    "Software & SaaS": {
+      "count": 7239,
+      "credits": 0.00,
+      "debits": -12500000.00,
+      "weekly_credits": [...],
+      "weekly_debits": [...]
+    }
+    // ... more categories
+  },
+  "clusters": { ... },          // vendor-level detail
+  "row_categories": { ... }     // per-transaction mapping
+}</div>
+
+  <h3>Parameters</h3>
+  <table>
+    <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+    <tr><td><code>user_id</code></td><td>string</td><td>User identifier</td></tr>
+    <tr><td><code>account_ids</code></td><td>string (comma-sep)</td><td>Filter by specific accounts</td></tr>
+    <tr><td><code>source_type</code></td><td>string</td><td>Filter by source (plaid/stripe/upload)</td></tr>
+    <tr><td><code>period</code></td><td>string</td><td>weekly (default), biweekly, monthly</td></tr>
+    <tr><td><code>group_by_dimension</code></td><td>string</td><td>Optional dimension grouping</td></tr>
+  </table>
+</section>
+
+<!-- SECTION 6: FORECASTING -->
+<section id="forecasting">
+  <h2>6. Forecasting Pipeline</h2>
+  <p><strong>Endpoint:</strong> <code>POST /api/forecast/generate</code></p>
+  <p class="file-ref">agent/forecast.py · routes/agent_routes.py:1775-1855</p>
+
+  <h3>Available Algorithms</h3>
+  <div class="grid2">
+    <div class="card">
+      <h4>Standard Algorithms</h4>
+      <table>
+        <tr><th>Algorithm</th><th>Description</th></tr>
+        <tr><td><strong>Naive</strong></td><td>Repeats last observed value</td></tr>
+        <tr><td><strong>SMA</strong></td><td>Simple Moving Average (window=4)</td></tr>
+        <tr><td><strong>WMA</strong></td><td>Weighted Moving Average (recent heavier)</td></tr>
+        <tr><td><strong>SES</strong></td><td>Single Exponential Smoothing (α=0.3)</td></tr>
+        <tr><td><strong>Holt</strong></td><td>Holt's Linear Trend (α=0.8, β=0.2) — DEFAULT</td></tr>
+        <tr><td><strong>Holt-Winters</strong></td><td>Triple exp. smoothing with seasonality</td></tr>
+        <tr><td><strong>Linear Regression</strong></td><td>Straight-line extrapolation</td></tr>
+        <tr><td><strong>Growth Rate</strong></td><td>Compound average growth rate</td></tr>
+        <tr><td><strong>Seasonal Naive</strong></td><td>Repeats last seasonal cycle</td></tr>
+      </table>
+    </div>
+    <div class="card red">
+      <h4>Advanced Algorithms (with confidence bands)</h4>
+      <table>
+        <tr><th>Algorithm</th><th>Description</th></tr>
+        <tr><td><strong>ARIMA</strong></td><td>Auto-regressive with auto (p,d,q) selection via AIC. Returns 95% confidence intervals.</td></tr>
+        <tr><td><strong>Ensemble</strong></td><td>Trend + Fourier seasonality + residual noise decomposition. Auto-detects season length.</td></tr>
+        <tr><td><strong>Monte Carlo</strong></td><td>N stochastic simulation paths (default 1000). Returns p10/p25/p50/p75/p90 percentile bands.</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <h3>Forecast Generation Flow</h3>
+  <div class="step-flow">
+    <div class="step"><span class="num">1</span><span class="label">Input</span><span class="desc">Cash flow model rows + actual/forecast period counts + method</span></div>
+    <div class="arrow">→</div>
+    <div class="step"><span class="num">2</span><span class="label">Per-Row</span><span class="desc">Forecast each leaf category row individually</span></div>
+    <div class="arrow">→</div>
+    <div class="step"><span class="num">3</span><span class="label">Extend</span><span class="desc">Append forecast values to row's values array</span></div>
+    <div class="arrow">→</div>
+    <div class="step"><span class="num">4</span><span class="label">Recalc</span><span class="desc">Recompute totals, net, running balance</span></div>
+    <div class="arrow">→</div>
+    <div class="step"><span class="num">5</span><span class="label">Metrics</span><span class="desc">Fit scores, trend direction, confidence bands</span></div>
+  </div>
+
+  <div class="card">
+    <h4>Custom Agent-Written Algorithms</h4>
+    <p>The AI agent can write custom forecasting algorithms on demand:</p>
+    <ul>
+      <li>Agent writes a Python function via the <code>save_forecast_algorithm</code> tool</li>
+      <li>Saved to <code>data/{user_id}/forecast/custom_algos/{algo_id}.py</code></li>
+      <li>Must define <code>forecast(historical, periods, params)</code></li>
+      <li>Appears in the algorithm dropdown alongside built-in methods</li>
+    </ul>
+  </div>
+
+  <h3>AI Forecast Interpretation</h3>
+  <div class="card yellow">
+    <p><strong>Endpoint:</strong> <code>POST /api/forecast/interpret</code></p>
+    <p><strong>Model:</strong> Claude Sonnet 4.5</p>
+    <p>After generating forecasts, the AI interprets results — providing narrative analysis of trends, risk factors, seasonal patterns, and recommendations.</p>
+    <p class="file-ref">agent/forecast_interpreter.py</p>
+  </div>
+</section>
+
+<!-- SECTION 7: STANDARDIZED DB -->
+<section id="standardized">
+  <h2>7. Standardized Cash Flow DB</h2>
+  <p>Location: <code>data/{user_id}/standardized/cash_flow.db</code></p>
+  <p>A denormalized OLTP store derived from the ledger, optimized for fast cash flow queries.</p>
+
+  <div class="grid2">
+    <div class="card">
+      <h4>Table: <code>metadata</code></h4>
+      <p>Key-value store for dataset metadata.</p>
+      <table>
+        <tr><th>Column</th><th>Type</th></tr>
+        <tr><td><code>key</code></td><td>TEXT PK</td></tr>
+        <tr><td><code>value</code></td><td>TEXT (JSON)</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h4>Table: <code>categories</code></h4>
+      <p>Simplified category names from ledger.</p>
+      <table>
+        <tr><th>Column</th><th>Type</th></tr>
+        <tr><td><code>id</code></td><td>INTEGER PK</td></tr>
+        <tr><td><code>name</code></td><td>TEXT UNIQUE</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h4>Table: <code>clusters</code></h4>
+      <p>Vendor-level groupings with aggregate stats.</p>
+      <table>
+        <tr><th>Column</th><th>Type</th></tr>
+        <tr><td><code>id</code></td><td>TEXT PK</td></tr>
+        <tr><td><code>category_id</code></td><td>INTEGER FK</td></tr>
+        <tr><td><code>representative</code></td><td>TEXT</td></tr>
+        <tr><td><code>size / total_amount / credits / debits</code></td><td>REAL</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h4>Table: <code>category_weekly</code></h4>
+      <p>Weekly breakdown by category for fast chart rendering.</p>
+      <table>
+        <tr><th>Column</th><th>Type</th></tr>
+        <tr><td><code>category_id</code></td><td>INTEGER FK</td></tr>
+        <tr><td><code>week_index</code></td><td>INTEGER</td></tr>
+        <tr><td><code>credits / debits</code></td><td>REAL</td></tr>
+      </table>
+      <p><strong>PK:</strong> (category_id, week_index)</p>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 8: FRONTEND -->
+<section id="frontend">
+  <h2>8. Frontend Display Flow</h2>
+
+  <h3>CashFlow.tsx — Main Cash Flow Page</h3>
+  <div class="card">
+    <p>The primary interface for viewing and interacting with cash flow data.</p>
+    <h4>Data Loading Flow:</h4>
+    <ol>
+      <li><code>GET /api/ledger/cash-flow</code> — Fetches classified data from ledger</li>
+      <li><code>buildModel()</code> — Converts JSON response to row-based grid model</li>
+      <li>Each category becomes a row with per-period values</li>
+      <li>Total inflows, total outflows, net cash flow, and running balance are computed</li>
+      <li>Users can select which accounts to include via checkboxes</li>
+      <li>Period granularity changeable: weekly / biweekly / monthly</li>
+    </ol>
+    <h4>Forecast Integration:</h4>
+    <ul>
+      <li>Forecast panel allows selecting algorithm, forecast periods, confidence bands</li>
+      <li><code>POST /api/forecast/generate</code> extends row values with projected data</li>
+      <li>Actual periods shown as solid lines, forecast periods as dashed</li>
+      <li>Advanced algorithms show confidence bands as shaded regions</li>
+    </ul>
+    <p class="file-ref">SHEKLAI/src/Pages/CashFlow.tsx (3,911 lines)</p>
+  </div>
+
+  <h3>ThirteenWeekForecast.tsx — Forecasting Dashboard</h3>
+  <div class="card">
+    <p>Dedicated analytics dashboard for deep-dive forecasting.</p>
+    <h4>Features:</h4>
+    <ul>
+      <li><strong>Algorithm comparison</strong> — Run multiple algorithms side-by-side</li>
+      <li><strong>Residual analysis</strong> — Backtest error visualization</li>
+      <li><strong>Correlation heatmap</strong> — Category forecast correlations</li>
+      <li><strong>Interactive explorer</strong> — Tune parameters and see live results</li>
+      <li><strong>AI interpretation</strong> — Sonnet 4.5 narrative analysis</li>
+      <li><strong>Agent suggestions</strong> — Algorithm and parameter recommendations</li>
+    </ul>
+    <p class="file-ref">SHEKLAI/src/Pages/ThirteenWeekForecast.tsx</p>
+  </div>
+</section>
+
+<!-- SECTION 9: FILES -->
+<section id="files">
+  <h2>9. Key File Reference</h2>
+  <table>
+    <tr><th>File</th><th>Purpose</th></tr>
+    <tr><td><code>SHEKLAI_Python/main.py</code></td><td>FastAPI app entry point, startup/shutdown</td></tr>
+    <tr><td><code>SHEKLAI_Python/routes/agent_routes.py</code></td><td>Agent, file upload, forecast, chat endpoints</td></tr>
+    <tr><td><code>SHEKLAI_Python/routes/ledger_routes.py</code></td><td>Ledger, classification, cash-flow endpoints</td></tr>
+    <tr><td><code>SHEKLAI_Python/routes/plaid_routes.py</code></td><td>Plaid Link, token exchange, transaction sync</td></tr>
+    <tr><td><code>SHEKLAI_Python/routes/stripe_routes.py</code></td><td>Stripe connect, transaction sync</td></tr>
+    <tr><td><code>SHEKLAI_Python/agent/ledger.py</code></td><td>Ledger DB operations, cash flow generation, ingestion</td></tr>
+    <tr><td><code>SHEKLAI_Python/agent/normalizer.py</code></td><td>AI normalizer agent (Opus 4.5)</td></tr>
+    <tr><td><code>SHEKLAI_Python/agent/classifier.py</code></td><td>Incremental classifier (clustering + LLM)</td></tr>
+    <tr><td><code>SHEKLAI_Python/agent/clustering.py</code></td><td>TF-IDF + agglomerative clustering</td></tr>
+    <tr><td><code>SHEKLAI_Python/agent/dimensions.py</code></td><td>Dimension extraction (LLM batches)</td></tr>
+    <tr><td><code>SHEKLAI_Python/agent/forecast.py</code></td><td>12 built-in + custom forecast algorithms</td></tr>
+    <tr><td><code>SHEKLAI_Python/agent/forecast_interpreter.py</code></td><td>AI forecast interpretation (Sonnet 4.5)</td></tr>
+    <tr><td><code>SHEKLAI_Python/agent/smart_reader.py</code></td><td>Universal file reader (CSV/XLS/XLSX)</td></tr>
+    <tr><td><code>SHEKLAI_Python/agent/tools.py</code></td><td>Agent tool definitions (save algo, suggest, etc.)</td></tr>
+    <tr><td><code>SHEKLAI_Python/agent/prompts.py</code></td><td>System prompts for AI agents</td></tr>
+    <tr><td><code>SHEKLAI/src/Pages/CashFlow.tsx</code></td><td>Main cash flow page (grid + charts + forecast)</td></tr>
+    <tr><td><code>SHEKLAI/src/Pages/ThirteenWeekForecast.tsx</code></td><td>Forecasting dashboard</td></tr>
+    <tr><td><code>SHEKLAI/src/Pages/ClassificationResults.tsx</code></td><td>Classification results viewer</td></tr>
+    <tr><td><code>env_info.json</code></td><td>API keys, LLM config, Plaid/Stripe credentials</td></tr>
+  </table>
+
+  <h3>Data Directory Structure</h3>
+  <div class="flow-diagram">data/{user_id}/
+├── ledger/
+│   └── ledger.db                    ← Source of truth (SQLite)
+├── standardized/
+│   └── cash_flow.db                 ← Denormalized cache (SQLite)
+├── plaid_connections.json           ← Plaid account metadata
+├── plaid_transactions.csv           ← Synced Plaid transactions
+├── stripe_connection.json           ← Stripe account metadata
+├── stripe_transactions.csv          ← Synced Stripe transactions
+├── cluster_cache.json               ← Cluster → category mapping cache
+├── suggested_categories.json        ← LLM-suggested categories
+├── categories.json                  ← Active category list
+├── dataset_profile.yaml             ← Dataset metadata for agent context
+├── forecast/
+│   └── custom_algos/                ← Agent-written forecast algorithms
+│       └── {algo_id}.py
+└── {uploaded_files}                 ← User-uploaded CSV/XLS files</div>
+</section>
+
+</div>
+
+<div style="text-align:center; padding:40px; color:var(--muted); font-size:0.85rem; border-top:1px solid var(--border);">
+  Shekl.AI Data Flow Report — Generated Feb 2026
+</div>
+
+</body>
+</html>

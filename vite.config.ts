@@ -1,9 +1,17 @@
+import path from 'path'
+import { fileURLToPath } from 'url'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  // Expose REACT_APP_* env vars to the client (so REACT_APP_ENCRYPTION_KEY works)
   envPrefix: ['VITE_', 'REACT_APP_'],
+  resolve: {
+    alias: {
+      dompurify: path.resolve(__dirname, 'node_modules/dompurify/dist/purify.es.mjs'),
+    },
+  },
 })

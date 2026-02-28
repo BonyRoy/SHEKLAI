@@ -1,8 +1,14 @@
 import { useState } from 'react';
 import { toast } from 'react-toastify';
 import { getEncryptionService } from './encryption';
+import { setAuthToken } from './userContext';
+import { API_BASE_URL } from './apiConfig';
 
-const API_BASE_URL = 'http://localhost:8000';
+/** Demo account for testing when backend/DB is not available. Case-sensitive. */
+export const DEMO_EMAIL = 'demo@shekl.ai';
+export const DEMO_PASSWORD = 'Demo123!';
+export const isDemoCredentials = (email: string, password: string) =>
+  email.trim().toLowerCase() === DEMO_EMAIL.toLowerCase() && password === DEMO_PASSWORD;
 
 interface SignUpData {
   userName: string;
@@ -123,6 +129,30 @@ export const useLogin = () => {
   const signIn = async (data: SignInData): Promise<SignInResponse | null> => {
     setLoading(true);
     try {
+      // Demo account: sign in without API (works when backend/DB is unavailable)
+      if (isDemoCredentials(data.email, data.password)) {
+        await new Promise((r) => setTimeout(r, 400)); // brief delay for UX
+        const demoId = `demo-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        const demoResponse: SignInResponse = {
+          message: 'Signed in with demo account.',
+          user: {
+            id: demoId as unknown as number,
+            userName: 'Demo User',
+            phoneNumber: '',
+            email: DEMO_EMAIL,
+            uuid: demoId,
+            sixDigitCode: '',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          },
+          success: true,
+        };
+        setAuthToken("demo-token-" + demoId);
+        toast.success(demoResponse.message);
+        setLoading(false);
+        return demoResponse;
+      }
+
       // Get encryption service
       const encryptionService = getEncryptionService();
       
@@ -155,6 +185,11 @@ export const useLogin = () => {
         encryptedResponse.encrypted_data
       );
       console.log('[signin] decrypted response:', decryptedResponse);
+
+      // Store JWT token if present in response
+      if ((decryptedResponse as unknown as Record<string, unknown>).token) {
+        setAuthToken((decryptedResponse as unknown as Record<string, unknown>).token as string);
+      }
 
       toast.success(decryptedResponse.message || 'Sign in successful!');
       return decryptedResponse;

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import login from "../../public/LOGIN.png"
 import "../Components/Pricing.css";
 import "./Login.css";
-import { useLogin } from "../services/useLogin";
+import { useLogin, DEMO_EMAIL, DEMO_PASSWORD } from "../services/useLogin";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import FullPageLoader from "../Components/FullPageLoader";
 
@@ -76,42 +76,35 @@ const Login = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const buttonStyle = {
+  const buttonStyle: React.CSSProperties = {
     width: "100%",
-    padding: "8px",
-    background: "linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%)",
+    padding: "12px",
+    background: "var(--primary)",
     color: "white",
     border: "none",
     borderRadius: "8px",
-    fontSize: "1.1rem",
+    fontSize: "0.95rem",
     fontWeight: 600,
     cursor: "pointer",
-    transition: "transform 0.2s ease, box-shadow 0.2s ease",
-    fontFamily: "Arial, Helvetica, sans-serif"
+    transition: "all 150ms cubic-bezier(0.4, 0, 0.2, 1)",
+    fontFamily: "'Inter', sans-serif",
+    letterSpacing: "-0.01em",
   };
 
-  const inputStyle = {
-    border: "none",
-    borderBottom: "1px solid #ccc",
-    outline: "none",
-    padding: "8px 0",
-    background: "transparent",
-    color: "inherit",
-    caretColor: "inherit"
-  };
+  const inputStyle: React.CSSProperties = {};
 
   const handleMouseEnter = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.currentTarget.style.transform = "translateY(-2px)";
-    e.currentTarget.style.boxShadow = "0 4px 12px rgba(59, 130, 246, 0.4)";
+    e.currentTarget.style.background = "var(--primary-dark)";
+    e.currentTarget.style.boxShadow = "0 4px 12px rgba(37, 99, 235, 0.25)";
   };
 
   const handleMouseLeave = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.currentTarget.style.transform = "translateY(0)";
+    e.currentTarget.style.background = "var(--primary)";
     e.currentTarget.style.boxShadow = "none";
   };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.currentTarget.style.transform = "translateY(0)";
+    e.currentTarget.style.background = "var(--primary-dark)";
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -265,11 +258,11 @@ const Login = () => {
               >
                 {loading ? "Changing Password..." : "Change Password"}
               </button>
-              <p style={{ textAlign: "center", marginTop: "10px" }}>
+              <p style={{ textAlign: "center", marginTop: "12px", fontSize: "0.875rem", color: "var(--text-secondary)" }}>
                 Remember your password?{" "}
                 <span 
                   className="ai-gradient" 
-                  style={{ color: "blue", cursor: "pointer", fontWeight: "bold" }}
+                  style={{ cursor: "pointer", fontWeight: 600 }}
                   onClick={handleBackToSignIn}
                 >
                   Sign In
@@ -336,11 +329,11 @@ const Login = () => {
               >
                 {loading ? "Signing Up..." : "Sign Up"}
               </button>
-              <p style={{ textAlign: "center", marginTop: "10px" }}>
+              <p style={{ textAlign: "center", marginTop: "12px", fontSize: "0.875rem", color: "var(--text-secondary)" }}>
                 Already have an account?{" "}
                 <span 
                   className="ai-gradient" 
-                  style={{ color: "blue", cursor: "pointer", fontWeight: "bold" }}
+                  style={{ cursor: "pointer", fontWeight: 600 }}
                   onClick={() => {
                     setIsSignUp(false);
                     setShowSignUpPassword(false);
@@ -384,11 +377,12 @@ const Login = () => {
                   display: "flex",
                   alignItems: "center",
                   gap: "8px",
-                  marginTop: "12px",
-                  marginBottom: "12px",
+                  marginTop: "4px",
+                  marginBottom: "4px",
                   cursor: "pointer",
-                  fontSize: "0.9rem",
-                  color: "inherit",
+                  fontSize: "0.85rem",
+                  color: "var(--text-secondary)",
+                  fontWeight: 500,
                 }}
               >
                 <input
@@ -411,10 +405,39 @@ const Login = () => {
               >
                 {loading ? "Signing In..." : "Sign In"}
               </button>
-              <p style={{ textAlign: "center", marginTop: "10px" }}>
+              <p
+                style={{
+                  textAlign: "center",
+                  marginTop: "12px",
+                  fontSize: "0.8rem",
+                  color: "var(--text-muted)",
+                }}
+              >
+                Demo account:{" "}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSignInData({ email: DEMO_EMAIL, password: DEMO_PASSWORD });
+                  }}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    padding: 0,
+                    font: "inherit",
+                    color: "var(--primary)",
+                    cursor: "pointer",
+                    fontWeight: 600,
+                    textDecoration: "underline",
+                  }}
+                >
+                  {DEMO_EMAIL} / {DEMO_PASSWORD}
+                </button>
+                {" "}(click to fill)
+              </p>
+              <p style={{ textAlign: "center", marginTop: "8px" }}>
                 <span 
                   className="ai-gradient" 
-                  style={{ color: "blue", cursor: "pointer", fontWeight: "bold", fontSize: "0.9rem" }}
+                  style={{ cursor: "pointer", fontWeight: 600, fontSize: "0.85rem" }}
                   onClick={() => {
                     setIsForgotPassword(true);
                     setShowSignInPassword(false);
@@ -423,11 +446,11 @@ const Login = () => {
                   Forgot Password?
                 </span>
               </p>
-              <p style={{ textAlign: "center", marginTop: "10px" }}>
+              <p style={{ textAlign: "center", marginTop: "8px", fontSize: "0.875rem", color: "var(--text-secondary)" }}>
                 Don't have an account?{" "}
                 <span 
                   className="ai-gradient" 
-                  style={{ color: "blue", cursor: "pointer", fontWeight: "bold" }}
+                  style={{ cursor: "pointer", fontWeight: 600 }}
                   onClick={() => {
                     setIsSignUp(true);
                     setShowSignInPassword(false);

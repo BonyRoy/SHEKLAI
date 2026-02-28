@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shekl.AI — Scalable Multi-Account Architecture Report</title>
+<style>
+:root{--bg:#0a0e1a;--s1:#131a2e;--s2:#1a2340;--s3:#243056;--bdr:rgba(99,130,255,0.1);--t1:#e8edf5;--t2:#8893ad;--t3:#5c6580;--acc:#4f7cff;--grn:#22c55e;--red:#ef4444;--prp:#a78bfa;--org:#f59e0b;--cyn:#06b6d4;--pnk:#ec4899;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t1);line-height:1.65;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1040px;margin:0 auto;padding:3.5rem 2rem 6rem}
+@media(max-width:700px){.wrap{padding:2rem 1rem 4rem}}
+
+/* Typography */
+h1{font-size:2.4rem;font-weight:800;letter-spacing:-1.5px;line-height:1.15;margin-bottom:.4rem}
+h1 em{font-style:normal;background:linear-gradient(135deg,#4f7cff,#a78bfa,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero-sub{font-size:1.05rem;color:var(--t2);margin-bottom:3.5rem;max-width:700px}
+h2{font-size:1.45rem;font-weight:700;letter-spacing:-.5px;margin:3rem 0 .75rem;display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+h3{font-size:1.1rem;font-weight:700;margin:1.8rem 0 .6rem;color:var(--t1)}
+h4{font-size:.95rem;font-weight:700;margin:1.2rem 0 .5rem;color:var(--t2)}
+p,li{font-size:.9rem;color:var(--t2)}
+p{margin-bottom:.65rem}
+ul,ol{padding-left:1.4rem;margin-bottom:1rem}
+li{margin-bottom:.3rem}
+li strong,li b{color:var(--t1)}
+a{color:var(--acc);text-decoration:none}
+
+/* Tags */
+.tag{display:inline-block;padding:.15rem .55rem;font-size:.65rem;font-weight:700;border-radius:6px;letter-spacing:.04em;text-transform:uppercase;vertical-align:middle}
+.tR{background:rgba(239,68,68,.12);color:#ef4444}.tG{background:rgba(34,197,94,.12);color:#22c55e}
+.tB{background:rgba(79,124,255,.12);color:#4f7cff}.tP{background:rgba(167,139,250,.12);color:#a78bfa}
+.tO{background:rgba(245,158,11,.12);color:#f59e0b}.tC{background:rgba(6,182,212,.12);color:#06b6d4}
+.tK{background:rgba(236,72,153,.12);color:#ec4899}
+
+/* Cards */
+.card{background:var(--s1);border:1px solid var(--bdr);border-radius:14px;padding:1.4rem;margin-bottom:1.1rem}
+.card-sm{padding:1rem}
+.card h4{margin-top:0}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem}
+@media(max-width:800px){.g2,.g3,.g4{grid-template-columns:1fr}}
+
+/* Tables */
+table{width:100%;border-collapse:collapse;font-size:.82rem;margin:1rem 0}
+th{text-align:left;padding:.6rem .7rem;font-weight:700;color:var(--t3);border-bottom:2px solid var(--bdr);font-size:.72rem;text-transform:uppercase;letter-spacing:.06em}
+td{padding:.6rem .7rem;border-bottom:1px solid var(--bdr);color:var(--t2);vertical-align:top}
+tr:hover td{background:rgba(255,255,255,.015)}
+
+/* Code */
+code{font-family:'JetBrains Mono','Fira Code',monospace;font-size:.78rem;background:rgba(79,124,255,.08);padding:.12rem .4rem;border-radius:4px;color:#93c5fd}
+pre{background:var(--s2);border:1px solid var(--bdr);border-radius:10px;padding:1.1rem 1.2rem;overflow-x:auto;margin:1rem 0;font-size:.76rem;line-height:1.55;color:#93c5fd;font-family:'JetBrains Mono','Fira Code',monospace}
+pre .cm{color:#5c6580}
+pre .kw{color:#c084fc}
+pre .str{color:#86efac}
+pre .fn{color:#67e8f9}
+
+/* Misc */
+.divider{height:1px;background:var(--bdr);margin:2.5rem 0}
+.hl{background:rgba(79,124,255,.07);border-left:3px solid var(--acc);padding:1rem 1.3rem;border-radius:0 10px 10px 0;margin:1.2rem 0}
+.hl p{margin:0;color:var(--t1)}
+.metric{text-align:center;padding:1.1rem .5rem}
+.mv{font-size:1.6rem;font-weight:800}
+.ml{font-size:.72rem;color:var(--t3);margin-top:.3rem}
+.flow{display:flex;align-items:center;gap:.45rem;flex-wrap:wrap;margin:1rem 0}
+.fs{background:var(--s3);padding:.5rem .8rem;border-radius:8px;font-size:.78rem;font-weight:600;color:var(--t1);white-space:nowrap;border:1px solid var(--bdr)}
+.fa{color:var(--t3);font-size:1.1rem;flex-shrink:0}
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin:1.5rem 0}
+@media(max-width:640px){.compare{grid-template-columns:1fr}}
+.cside{padding:1.3rem;border-radius:12px}
+.cbad{background:rgba(239,68,68,.04);border:1px solid rgba(239,68,68,.15)}
+.cgood{background:rgba(34,197,94,.04);border:1px solid rgba(34,197,94,.15)}
+.ctitle{font-size:.88rem;font-weight:700;margin-bottom:.7rem;display:flex;align-items:center;gap:.4rem}
+.num{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;font-size:.72rem;font-weight:800;color:#fff;flex-shrink:0}
+.section-num{background:var(--acc)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1><em>Shekl.AI v2</em> — Scalable Architecture</h1>
+<p class="hero-sub">A comprehensive report covering the current system, its limitations, and a complete multi-tenant, multi-account redesign — covering the unified ledger, agentic pipeline changes, frontend overhaul, and migration strategy.</p>
+
+<!-- ===================================================================== -->
+<h2>Part 1 — Current System Audit <span class="tag tR">AS-IS</span></h2>
+
+<h3>System Map</h3>
+<p>Every component in the current stack, how data flows, and where assumptions break.</p>
+
+<div class="g3">
+  <div class="card card-sm">
+    <h4 style="color:var(--acc)">Frontend (React + Vite)</h4>
+    <ul>
+      <li><b>CashFlow.tsx</b> — 13-week model + insights</li>
+      <li><b>ClassificationResults.tsx</b> — category browser</li>
+      <li><b>ConnectData.tsx</b> — upload, Plaid, Stripe</li>
+      <li><b>useAgentChat.ts</b> — WebSocket to agent</li>
+    </ul>
+    <p style="font-size:.75rem;color:var(--t3)">All pages use <code>getUserId()</code> only — no account concept.</p>
+  </div>
+  <div class="card card-sm">
+    <h4 style="color:var(--grn)">Backend (FastAPI + Python)</h4>
+    <ul>
+      <li><b>agent_routes.py</b> — WS, classify, standardized API</li>
+      <li><b>plaid_routes.py</b> — bank link + sync</li>
+      <li><b>stripe_routes.py</b> — payment sync</li>
+      <li><b>session_manager.py</b> — per-user agent sessions</li>
+    </ul>
+    <p style="font-size:.75rem;color:var(--t3)">Sessions keyed by <code>user_id</code> alone.</p>
+  </div>
+  <div class="card card-sm">
+    <h4 style="color:var(--prp)">AI Pipeline</h4>
+    <ul>
+      <li><b>classifier.py</b> — embed + cluster + LLM</li>
+      <li><b>tools.py</b> — 18 agent tools</li>
+      <li><b>prompts.py</b> — model-specific preambles</li>
+      <li><b>cash_flow_tools.py</b> — model builder</li>
+    </ul>
+    <p style="font-size:.75rem;color:var(--t3)">All tools scoped to single <code>user_data_dir</code>.</p>
+  </div>
+</div>
+
+<h3>Data Flow Today</h3>
+<div class="flow">
+  <div class="fs" style="border-color:rgba(79,124,255,.3)">Upload / Plaid / Stripe</div>
+  <div class="fa">→</div>
+  <div class="fs" style="border-color:rgba(245,158,11,.3)">smart_reader.py</div>
+  <div class="fa">→</div>
+  <div class="fs" style="border-color:rgba(167,139,250,.3)">classifier.py</div>
+  <div class="fa">→</div>
+  <div class="fs" style="border-color:rgba(34,197,94,.3)">categories.json</div>
+  <div class="fa">→</div>
+  <div class="fs" style="border-color:rgba(6,182,212,.3)">cash_flow.db (SQLite)</div>
+  <div class="fa">→</div>
+  <div class="fs" style="border-color:rgba(236,72,153,.3)">Frontend UI</div>
+</div>
+
+<h3>Directory Structure (Per User)</h3>
+<pre>data/
+  {user_id}/
+    bank_statement.csv          <span class="cm">← uploaded files live here</span>
+    plaid_transactions.csv      <span class="cm">← Plaid sync output</span>
+    stripe_transactions.csv     <span class="cm">← Stripe sync output</span>
+    plaid_connections.json      <span class="cm">← Plaid tokens</span>
+    stripe_connection.json      <span class="cm">← Stripe key</span>
+    categories.json             <span class="cm">← classification output</span>
+    standardized/
+      cash_flow_data.json       <span class="cm">← canonical data</span>
+      cash_flow.db              <span class="cm">← SQLite store</span>
+      cash_flow_model.json      <span class="cm">← agent-built 13-week model</span>
+      insights.json             <span class="cm">← published dashboards</span></pre>
+
+<h3>What Breaks at Scale</h3>
+
+<table>
+  <thead><tr><th style="width:30%">Component</th><th style="width:35%">Current Assumption</th><th style="width:35%">Problem at Scale</th></tr></thead>
+  <tbody>
+    <tr><td><code>session_manager.py</code></td><td>1 session per user_id</td><td>Can't isolate accounts; all data mixed in one agent context</td></tr>
+    <tr><td><code>tools.py</code> — <code>make_user_tools()</code></td><td>All tools scoped to single <code>data/{user_id}/</code></td><td>Agent sees all files from all accounts, can't target one</td></tr>
+    <tr><td><code>classifier.py</code></td><td>Classifies one file at a time</td><td>4 Plaid accounts + 2 uploads + Stripe = 7 files unmerged</td></tr>
+    <tr><td><code>standardized_sqlite.py</code></td><td>One <code>cash_flow.db</code> per user</td><td>No <code>account_id</code> column; can't filter or compare accounts</td></tr>
+    <tr><td><code>cash_flow_tools.py</code></td><td>One model, one insights list</td><td>Can't build account-specific dashboards</td></tr>
+    <tr><td><code>agent_routes.py</code> — context</td><td>Dumps all files into agent prompt</td><td>Context bloat: 40+ files (mostly HTML) in prompt, no account focus</td></tr>
+    <tr><td><code>CashFlow.tsx</code></td><td>Fetches one dataset per user</td><td>No way to view "just my credit card" or compare two banks</td></tr>
+    <tr><td>Week calculation</td><td>Week 0 = first date in that file</td><td>Mixing files with different date ranges produces wrong alignment</td></tr>
+    <tr><td>Deduplication</td><td>None</td><td>Same transaction from Plaid + manual upload counted twice</td></tr>
+    <tr><td>Directory structure</td><td>Flat <code>data/{user_id}/</code></td><td>Files from different sources and accounts mixed together</td></tr>
+  </tbody>
+</table>
+
+<div class="divider"></div>
+
+<!-- ===================================================================== -->
+<h2>Part 2 — Target Architecture <span class="tag tG">TO-BE</span></h2>
+
+<div class="hl">
+  <p><strong>Design principle:</strong> One user has many <em>data sources</em> (uploads, Plaid accounts, Stripe). All transactions flow into a <strong>unified ledger</strong> per user. The agent, classifier, and UI all operate on the ledger — not on individual files. Every transaction carries its source and account, enabling filtering, dedup, and cross-account analysis.</p>
+</div>
+
+<h3>New Directory Structure</h3>
+<pre>data/
+  {user_id}/
+    sources/                        <span class="cm">← raw data from each source</span>
+      uploads/
+        bank_statement.csv
+        hdfc_2018.xls
+      plaid/
+        plaid_connections.json
+        plaid_raw_transactions.csv  <span class="cm">← raw sync dump</span>
+      stripe/
+        stripe_connection.json
+        stripe_raw_transactions.csv
+    ledger/                         <span class="cm">← unified, deduped store</span>
+      ledger.db                     <span class="cm">← THE single source of truth</span>
+    standardized/                   <span class="cm">← classification outputs (all accounts)</span>
+      cash_flow.db                  <span class="cm">← enriched with account_id columns</span>
+      cash_flow_model.json
+      insights.json
+      versions/</pre>
+
+<h3>Unified Ledger Schema</h3>
+<pre><span class="kw">CREATE TABLE</span> <span class="fn">accounts</span> (
+    id            TEXT PRIMARY KEY,   <span class="cm">-- e.g. 'plaid_3odN8Pb...' or 'upload_hdfc_2018'</span>
+    source_type   TEXT NOT NULL,      <span class="cm">-- 'plaid' | 'stripe' | 'upload'</span>
+    source_name   TEXT,               <span class="cm">-- 'Chase' | 'HDFC Bank' | 'Stripe'</span>
+    display_name  TEXT NOT NULL,      <span class="cm">-- 'Checking ····0000' | 'HDFC Statement'</span>
+    account_type  TEXT,               <span class="cm">-- 'checking' | 'savings' | 'credit_card' | 'payment'</span>
+    currency      TEXT DEFAULT <span class="str">'USD'</span>,
+    metadata_json TEXT,               <span class="cm">-- extra info (mask, balance, institution_id...)</span>
+    created_at    TEXT NOT NULL,
+    last_synced   TEXT
+);
+
+<span class="kw">CREATE TABLE</span> <span class="fn">transactions</span> (
+    id            TEXT PRIMARY KEY,   <span class="cm">-- dedup key (source-specific)</span>
+    account_id    TEXT NOT NULL <span class="kw">REFERENCES</span> accounts(id),
+    description   TEXT NOT NULL,
+    amount        REAL NOT NULL,      <span class="cm">-- positive=inflow, negative=outflow</span>
+    txn_date      TEXT NOT NULL,      <span class="cm">-- YYYY-MM-DD</span>
+    currency      TEXT DEFAULT <span class="str">'USD'</span>,
+    raw_category  TEXT,               <span class="cm">-- Plaid category, Stripe type, etc.</span>
+    extra_json    TEXT,               <span class="cm">-- source-specific fields</span>
+    ingested_at   TEXT NOT NULL,
+
+    <span class="cm">-- Classification (filled after classify runs)</span>
+    category_id   INTEGER,
+    cluster_id    TEXT,
+    week_index    INTEGER             <span class="cm">-- ISO calendar week, global</span>
+);
+
+<span class="kw">CREATE INDEX</span> idx_txn_account  <span class="kw">ON</span> transactions(account_id);
+<span class="kw">CREATE INDEX</span> idx_txn_date     <span class="kw">ON</span> transactions(txn_date);
+<span class="kw">CREATE INDEX</span> idx_txn_category <span class="kw">ON</span> transactions(category_id);
+<span class="kw">CREATE INDEX</span> idx_txn_week     <span class="kw">ON</span> transactions(week_index);</pre>
+
+<h3>Deduplication Keys</h3>
+<div class="card">
+<table>
+  <thead><tr><th>Source</th><th>Key Format</th><th>Why</th></tr></thead>
+  <tbody>
+    <tr><td><span class="tag tG">Plaid</span></td><td><code>plaid_{transaction_id}</code></td><td>Plaid guarantees unique transaction IDs</td></tr>
+    <tr><td><span class="tag tP">Stripe</span></td><td><code>stripe_{balance_txn_id}</code></td><td>Stripe IDs are globally unique</td></tr>
+    <tr><td><span class="tag tB">Upload</span></td><td><code>upload_{sha256(file+row+date+desc+amt)[:16]}</code></td><td>Content hash prevents re-upload dupes</td></tr>
+  </tbody>
+</table>
+<p style="font-size:.8rem;margin:.5rem 0 0">All inserts use <code>INSERT OR IGNORE</code> — re-syncing or re-uploading is safe and idempotent.</p>
+</div>
+
+<div class="divider"></div>
+
+<!-- ===================================================================== -->
+<h2>Part 3 — Ingestion Layer <span class="tag tC">NEW MODULE</span></h2>
+
+<p>A new <code>agent/ledger.py</code> module encapsulates all ledger operations. Three ingestion adapters normalize data from each source into the unified schema.</p>
+
+<div class="g3">
+  <div class="card">
+    <h4><span class="num" style="background:var(--acc)">1</span> &nbsp;ingest_upload()</h4>
+    <p>Reads file via <code>smart_reader</code>, auto-detects columns, generates content-hash dedup keys, creates an <code>account</code> entry named after the file.</p>
+    <p style="font-size:.78rem"><b>Trigger:</b> After file upload to <code>/api/upload</code></p>
+  </div>
+  <div class="card">
+    <h4><span class="num" style="background:var(--grn)">2</span> &nbsp;ingest_plaid()</h4>
+    <p>Reads Plaid API response, creates one <code>account</code> per Plaid account (checking, savings, credit card), inserts transactions with Plaid transaction IDs as dedup keys.</p>
+    <p style="font-size:.78rem"><b>Trigger:</b> After <code>/api/plaid/sync-transactions</code></p>
+  </div>
+  <div class="card">
+    <h4><span class="num" style="background:var(--prp)">3</span> &nbsp;ingest_stripe()</h4>
+    <p>Reads Stripe balance transactions, creates single Stripe account, inserts with Stripe IDs. Maps <code>type</code> (charge, payout, refund) to raw_category.</p>
+    <p style="font-size:.78rem"><b>Trigger:</b> After <code>/api/stripe/sync-transactions</code></p>
+  </div>
+</div>
+
+<h3>Ingestion Pipeline</h3>
+<div class="flow">
+  <div class="fs" style="border-color:rgba(79,124,255,.3)">Raw Data</div>
+  <div class="fa">→</div>
+  <div class="fs" style="border-color:rgba(6,182,212,.3)">Adapter (normalize)</div>
+  <div class="fa">→</div>
+  <div class="fs" style="border-color:rgba(245,158,11,.3)">Dedup Check</div>
+  <div class="fa">→</div>
+  <div class="fs" style="border-color:rgba(34,197,94,.3)">Ledger INSERT</div>
+  <div class="fa">→</div>
+  <div class="fs" style="border-color:rgba(167,139,250,.3)">Auto-Classify (optional)</div>
+</div>
+
+<h3>Key Function Signatures</h3>
+<pre><span class="kw">class</span> <span class="fn">Ledger</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, user_id: str): ...
+
+    <span class="cm"># Account management</span>
+    <span class="kw">def</span> <span class="fn">upsert_account</span>(self, account_id, source_type, display_name, ...) -> None
+    <span class="kw">def</span> <span class="fn">list_accounts</span>(self) -> List[AccountInfo]
+    <span class="kw">def</span> <span class="fn">remove_account</span>(self, account_id) -> int  <span class="cm"># returns deleted txn count</span>
+
+    <span class="cm"># Ingestion</span>
+    <span class="kw">def</span> <span class="fn">ingest_transactions</span>(self, account_id, txns: List[TxnRow]) -> IngestResult
+    <span class="cm"># IngestResult = {inserted: int, skipped_dupes: int, total: int}</span>
+
+    <span class="cm"># Queries</span>
+    <span class="kw">def</span> <span class="fn">get_all_descriptions</span>(self, account_id=None) -> List[str]
+    <span class="kw">def</span> <span class="fn">get_transactions</span>(self, account_id=None, limit=500, offset=0) -> List[dict]
+    <span class="kw">def</span> <span class="fn">get_account_summary</span>(self) -> List[AccountSummary]
+    <span class="kw">def</span> <span class="fn">get_date_range</span>(self) -> Tuple[str, str]
+
+    <span class="cm"># Classification write-back</span>
+    <span class="kw">def</span> <span class="fn">update_classifications</span>(self, mapping: Dict[str, Tuple[int, str]]) -> int
+    <span class="cm"># mapping = {txn_id: (category_id, cluster_id)}</span></pre>
+
+<div class="divider"></div>
+
+<!-- ===================================================================== -->
+<h2>Part 4 — Classification Pipeline Redesign <span class="tag tO">CRITICAL</span></h2>
+
+<div class="compare">
+  <div class="cside cbad">
+    <div class="ctitle" style="color:var(--red)">❌ Current: Single-File</div>
+    <ol>
+      <li>Read one CSV via <code>smart_reader</code></li>
+      <li>Extract descriptions from that file</li>
+      <li>Cluster → LLM classify</li>
+      <li>Write <code>categories.json</code></li>
+      <li>Write to SQLite (no account_id)</li>
+      <li><b>Overwrites all previous data</b></li>
+    </ol>
+  </div>
+  <div class="cside cgood">
+    <div class="ctitle" style="color:var(--grn)">✅ Proposed: Ledger-Based</div>
+    <ol>
+      <li>Pull all <em>unclassified</em> descriptions from ledger</li>
+      <li>Reuse existing clusters for known descriptions</li>
+      <li>Only send <em>new</em> descriptions to LLM</li>
+      <li>Write-back category_id to ledger rows</li>
+      <li>Rebuild summaries with account_id grouping</li>
+      <li><b>Incremental — never loses data</b></li>
+    </ol>
+  </div>
+</div>
+
+<h3>Incremental Classification Flow</h3>
+<pre><span class="kw">def</span> <span class="fn">classify_ledger</span>(user_id, account_ids=None):
+    ledger = Ledger(user_id)
+
+    <span class="cm"># 1. Get unclassified descriptions (optionally filtered by account)</span>
+    new_descs = ledger.get_unclassified_descriptions(account_ids)
+
+    <span class="cm"># 2. Load existing cluster → category mapping</span>
+    existing = load_cluster_cache(user_id)
+
+    <span class="cm"># 3. Match new descriptions against existing clusters</span>
+    matched, unmatched = match_to_existing_clusters(new_descs, existing)
+
+    <span class="cm"># 4. Only call LLM for truly new descriptions</span>
+    <span class="kw">if</span> unmatched:
+        new_clusters = cluster_descriptions(unmatched)
+        new_categories = llm_classify(new_clusters)
+        existing.update(new_categories)
+        save_cluster_cache(user_id, existing)
+
+    <span class="cm"># 5. Write-back to ledger</span>
+    ledger.update_classifications(matched | new_categories)
+
+    <span class="cm"># 6. Rebuild weekly summaries (account-aware)</span>
+    rebuild_summaries(ledger, user_id)</pre>
+
+<h3>Why This Matters for Cost</h3>
+<div class="g3">
+  <div class="card metric">
+    <div class="mv" style="color:var(--red)">$6.37</div>
+    <div class="ml">Current: re-classify entire file every time</div>
+  </div>
+  <div class="card metric">
+    <div class="mv" style="color:var(--grn)">~$0.50</div>
+    <div class="ml">Incremental: only new descriptions hit LLM</div>
+  </div>
+  <div class="card metric">
+    <div class="mv" style="color:var(--acc)">90%+</div>
+    <div class="ml">Token savings on re-syncs</div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ===================================================================== -->
+<h2>Part 5 — Agentic Pipeline Changes <span class="tag tK">AGENT</span></h2>
+
+<p>The agent is the most complex piece. It uses 18 tools, maintains a Jupyter kernel, and gets context injected per-turn. Here's every change needed.</p>
+
+<h3>5.1 — Context Building (<code>agent_routes.py</code>)</h3>
+
+<div class="compare">
+  <div class="cside cbad">
+    <div class="ctitle" style="color:var(--red)">Current: _build_account_context()</div>
+    <p>Lists ALL 40+ files in <code>data/{user_id}/</code> (including .html dashboard files, .json configs). Dumps file list into prompt. No account awareness.</p>
+  </div>
+  <div class="cside cgood">
+    <div class="ctitle" style="color:var(--grn)">Proposed: _build_ledger_context()</div>
+    <p>Queries the ledger for a structured summary: accounts list with txn counts, date ranges, balances. Compact, focused, no file noise.</p>
+  </div>
+</div>
+
+<pre><span class="cm"># New context template injected per-turn</span>
+<span class="str">"""
+## Connected Accounts
+| # | Account              | Type        | Source | Transactions | Date Range          |
+|---|----------------------|-------------|--------|--------------|---------------------|
+| 1 | Checking ····0000    | checking    | Plaid  | 6 txns       | 2026-01-27 → 02-13  |
+| 2 | Savings ····1111     | savings     | Plaid  | 2 txns       | 2026-02-08 → 02-13  |
+| 3 | Credit Card ····3333 | credit_card | Plaid  | 8 txns       | 2026-01-29 → 02-23  |
+| 4 | HDFC 2018-19         | bank        | Upload | 412 txns     | 2018-04-01 → 03-31  |
+| 5 | Stripe Payments      | payment     | Stripe | 0 txns       | —                   |
+
+## Classification Status
+- 28 transactions classified (accounts 1-3)
+- 412 transactions unclassified (account 4 — run classify)
+- 0 transactions (account 5 — no data yet)
+
+## Cash Flow Model: 13-week model built (last updated 2h ago)
+"""</span></pre>
+
+<h3>5.2 — Tool Changes</h3>
+
+<table>
+  <thead><tr><th>Tool</th><th>Current</th><th>Change Needed</th></tr></thead>
+  <tbody>
+    <tr><td><code>list_user_files()</code></td><td>Lists flat <code>data/{user_id}/</code></td><td><b>Replace</b> with <code>list_accounts()</code> — returns ledger accounts summary</td></tr>
+    <tr><td><code>read_user_file()</code></td><td>Reads raw file</td><td>Keep but scope to <code>sources/</code> directory</td></tr>
+    <tr><td><code>classify_transactions()</code></td><td>Single-file classify</td><td><b>Replace</b> with <code>classify_ledger(account_ids?)</code> — ledger-based, incremental</td></tr>
+    <tr><td><code>standardize_and_store_sqlite()</code></td><td>Single-file SQLite write</td><td><b>Remove</b> — ledger handles storage; summaries auto-rebuild</td></tr>
+    <tr><td><code>view_cash_flow_model()</code></td><td>Reads single model</td><td>Keep — model still per-user (cross-account)</td></tr>
+    <tr><td><code>publish_cash_flow_insight()</code></td><td>Saves HTML insight</td><td>Keep — add optional <code>account_id</code> tag to insight metadata</td></tr>
+    <tr><td colspan="3" style="border:none;padding:.5rem .7rem"><b>New tools:</b></td></tr>
+    <tr><td><code>list_accounts()</code></td><td>—</td><td><span class="tag tG">NEW</span> Returns all connected accounts with stats</td></tr>
+    <tr><td><code>query_ledger(sql)</code></td><td>—</td><td><span class="tag tG">NEW</span> Read-only SQL against the ledger (agent can do ad-hoc analysis)</td></tr>
+    <tr><td><code>get_account_transactions()</code></td><td>—</td><td><span class="tag tG">NEW</span> Paginated transaction view with filters</td></tr>
+  </tbody>
+</table>
+
+<h3>5.3 — Prompt Updates (<code>prompts.py</code>)</h3>
+
+<div class="card">
+<p>The <code>BASE_SIMPLE_PROMPT</code> needs these sections updated:</p>
+<ul>
+  <li><b>Account Context</b> — "You receive a table of connected accounts (bank accounts, credit cards, uploads, Stripe) with transaction counts and date ranges."</li>
+  <li><b>Classification</b> — "Use <code>classify_ledger()</code> to classify all or specific accounts. This is incremental — only new descriptions are sent to the LLM."</li>
+  <li><b>Data Access</b> — "Use <code>query_ledger(sql)</code> for custom analysis. The ledger has: accounts, transactions (with account_id, category_id, amount, txn_date)."</li>
+  <li><b>Workflow</b> — Update the "Explore → Build → Publish" pattern to: "Explore accounts → Classify if needed → Build model → Publish dashboards"</li>
+</ul>
+</div>
+
+<h3>5.4 — Session Manager</h3>
+
+<div class="card">
+<p>Sessions remain <b>per-user</b> (not per-account). The agent operates across all of a user's accounts — it can compare, filter, and merge. The key change:</p>
+<ul>
+  <li><code>UserSession.ledger</code> — new field: a <code>Ledger</code> instance, initialized once per session</li>
+  <li><code>make_user_tools(user_data_dir, ledger)</code> — tools receive the ledger reference</li>
+  <li>Kernel working directory stays <code>data/{user_id}/</code> — agent can access all account data</li>
+</ul>
+</div>
+
+<div class="divider"></div>
+
+<!-- ===================================================================== -->
+<h2>Part 6 — Frontend Changes <span class="tag tB">UI</span></h2>
+
+<h3>6.1 — New API Endpoints</h3>
+<table>
+  <thead><tr><th>Endpoint</th><th>Method</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><code>/api/ledger/accounts</code></td><td>GET</td><td>List all accounts for a user (source, type, txn count, balance, date range)</td></tr>
+    <tr><td><code>/api/ledger/ingest</code></td><td>POST</td><td>Ingest a specific file or trigger re-ingest of all sources</td></tr>
+    <tr><td><code>/api/ledger/classify</code></td><td>POST</td><td>Run incremental classification (optional <code>account_ids</code> filter)</td></tr>
+    <tr><td><code>/api/ledger/cash-flow</code></td><td>GET</td><td>Cash flow data with <code>?account_id=</code> and <code>?source_type=</code> filters</td></tr>
+    <tr><td><code>/api/ledger/transactions</code></td><td>GET</td><td>Paginated transaction list with filters</td></tr>
+    <tr><td><code>/api/ledger/summary</code></td><td>GET</td><td>Dashboard overview: total balance, accounts, unclassified count</td></tr>
+  </tbody>
+</table>
+
+<h3>6.2 — CashFlow.tsx Changes</h3>
+<div class="card">
+<ul>
+  <li><b>Account selector dropdown</b> — "All Accounts" | per-account options, fetched from <code>/api/ledger/accounts</code></li>
+  <li><b>Source type tabs</b> — All | Banks (Plaid) | Uploads | Stripe</li>
+  <li><b>Account comparison mode</b> — side-by-side two accounts</li>
+  <li><b>Cash flow fetch</b> — updated to <code>/api/ledger/cash-flow?account_id={selected}</code></li>
+  <li><b>Insights</b> — tagged with source account, filterable</li>
+</ul>
+</div>
+
+<h3>6.3 — ConnectData.tsx Changes</h3>
+<div class="card">
+<ul>
+  <li><b>Auto-ingest on upload</b> — file upload → backend ingests into ledger automatically</li>
+  <li><b>Auto-ingest on sync</b> — Plaid/Stripe sync → auto-ingest → show "X new transactions"</li>
+  <li><b>"Classify All" button</b> — runs <code>/api/ledger/classify</code> for all unclassified transactions</li>
+  <li><b>Connected Sources panel</b> — richer: shows per-account txn counts, classification status, last sync</li>
+</ul>
+</div>
+
+<h3>6.4 — New: Accounts Overview Page (optional)</h3>
+<div class="card">
+<p>A dedicated page showing all connected accounts as cards, each with:</p>
+<ul>
+  <li>Balance (live from Plaid, or computed from transactions)</li>
+  <li>Transaction count + date range</li>
+  <li>Classification status (% classified)</li>
+  <li>Quick actions: Sync, Classify, View Transactions, Disconnect</li>
+</ul>
+</div>
+
+<div class="divider"></div>
+
+<!-- ===================================================================== -->
+<h2>Part 7 — Migration Strategy <span class="tag tO">ROLLOUT</span></h2>
+
+<div class="hl">
+  <p><strong>Zero downtime.</strong> The migration is additive — we create the ledger alongside the existing system, backfill data, then cut over. No data loss, no breaking changes.</p>
+</div>
+
+<h3>Migration Steps</h3>
+
+<div class="card">
+  <h4><span class="num section-num">1</span> &nbsp;Create Ledger Module (no breaking changes)</h4>
+  <p>Build <code>agent/ledger.py</code> with schema + ingestion adapters. Write tests. Existing system continues to work unchanged.</p>
+</div>
+
+<div class="card">
+  <h4><span class="num section-num">2</span> &nbsp;Wire Ingestion into Existing Endpoints</h4>
+  <p>After <code>/api/upload</code>, <code>/api/plaid/sync</code>, and <code>/api/stripe/sync</code> — add a call to the corresponding ingest adapter. Data now flows to BOTH old files AND new ledger.</p>
+</div>
+
+<div class="card">
+  <h4><span class="num section-num">3</span> &nbsp;Backfill Existing Data</h4>
+  <p>One-time script: scan <code>data/{user_id}/</code> for existing CSVs + Plaid/Stripe files, ingest them into the ledger. Preserves all historical data.</p>
+</div>
+
+<div class="card">
+  <h4><span class="num section-num">4</span> &nbsp;Build New Classification + Ledger API</h4>
+  <p>Create <code>/api/ledger/*</code> endpoints. Implement incremental classification. Both old and new APIs coexist.</p>
+</div>
+
+<div class="card">
+  <h4><span class="num section-num">5</span> &nbsp;Update Agent Tools + Prompts</h4>
+  <p>Replace single-file tools with ledger-aware tools. Update prompts. Agent now works with the unified ledger.</p>
+</div>
+
+<div class="card">
+  <h4><span class="num section-num">6</span> &nbsp;Update Frontend</h4>
+  <p>Switch frontend to use <code>/api/ledger/*</code> endpoints. Add account selector. Remove old single-file UI patterns.</p>
+</div>
+
+<div class="card">
+  <h4><span class="num section-num">7</span> &nbsp;Deprecate Old System</h4>
+  <p>Once all data flows through the ledger, remove old <code>/api/classify</code>, <code>categories.json</code>, and single-file pipeline. Clean up.</p>
+</div>
+
+<div class="divider"></div>
+
+<!-- ===================================================================== -->
+<h2>Part 8 — Implementation Estimate <span class="tag tP">TIMELINE</span></h2>
+
+<table>
+  <thead><tr><th>Phase</th><th>Work</th><th>Files Changed</th><th>Estimate</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><b>Phase 1</b><br>Ledger + Ingestion</td>
+      <td>
+        Create <code>ledger.py</code>, schema, 3 ingest adapters.<br>
+        Wire into upload/sync endpoints.<br>
+        Backfill script.
+      </td>
+      <td>
+        <code>agent/ledger.py</code> <span class="tag tG">NEW</span><br>
+        <code>routes/plaid_routes.py</code><br>
+        <code>routes/stripe_routes.py</code><br>
+        <code>routes/agent_routes.py</code>
+      </td>
+      <td><b>3-4 hrs</b></td>
+    </tr>
+    <tr>
+      <td><b>Phase 2</b><br>Ledger Classification</td>
+      <td>
+        Incremental classifier against ledger.<br>
+        <code>/api/ledger/classify</code> endpoint.<br>
+        Account-aware summary rebuild.
+      </td>
+      <td>
+        <code>agent/classifier.py</code><br>
+        <code>agent/ledger.py</code><br>
+        <code>routes/agent_routes.py</code>
+      </td>
+      <td><b>3-4 hrs</b></td>
+    </tr>
+    <tr>
+      <td><b>Phase 3</b><br>Agent Pipeline</td>
+      <td>
+        New tools: <code>list_accounts</code>, <code>classify_ledger</code>, <code>query_ledger</code>.<br>
+        Update context builder.<br>
+        Update all 3 model-specific prompts.
+      </td>
+      <td>
+        <code>agent/tools.py</code><br>
+        <code>agent/prompts.py</code><br>
+        <code>agent/session_manager.py</code><br>
+        <code>routes/agent_routes.py</code>
+      </td>
+      <td><b>3-4 hrs</b></td>
+    </tr>
+    <tr>
+      <td><b>Phase 4</b><br>Ledger API</td>
+      <td>
+        REST endpoints: accounts, cash-flow, transactions, summary.<br>
+        Account-filtered responses.
+      </td>
+      <td>
+        <code>routes/ledger_routes.py</code> <span class="tag tG">NEW</span><br>
+        <code>main.py</code>
+      </td>
+      <td><b>2-3 hrs</b></td>
+    </tr>
+    <tr>
+      <td><b>Phase 5</b><br>Frontend</td>
+      <td>
+        Account selector on CashFlow + ClassificationResults.<br>
+        Auto-ingest on ConnectData.<br>
+        Accounts overview panel.
+      </td>
+      <td>
+        <code>Pages/CashFlow.tsx</code><br>
+        <code>Pages/ClassificationResults.tsx</code><br>
+        <code>Pages/ConnectData.tsx</code>
+      </td>
+      <td><b>3-4 hrs</b></td>
+    </tr>
+    <tr>
+      <td><b>Phase 6</b><br>Testing + Polish</td>
+      <td>
+        End-to-end testing with Plaid sandbox.<br>
+        Multi-account agent flow testing.<br>
+        Cleanup old pipeline.
+      </td>
+      <td>Various</td>
+      <td><b>2-3 hrs</b></td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="g4">
+  <div class="card metric">
+    <div class="mv" style="color:var(--acc)">6</div>
+    <div class="ml">Phases</div>
+  </div>
+  <div class="card metric">
+    <div class="mv" style="color:var(--prp)">~18 hrs</div>
+    <div class="ml">Total estimate</div>
+  </div>
+  <div class="card metric">
+    <div class="mv" style="color:var(--grn)">12</div>
+    <div class="ml">Files changed</div>
+  </div>
+  <div class="card metric">
+    <div class="mv" style="color:var(--org)">2</div>
+    <div class="ml">New modules</div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ===================================================================== -->
+<h2>Part 9 — Scalability Guarantees <span class="tag tC">SCALE</span></h2>
+
+<div class="g2">
+  <div class="card">
+    <h4>Per-Customer Isolation</h4>
+    <ul>
+      <li>Each user has their own <code>ledger.db</code> — complete data isolation</li>
+      <li>No cross-user data leakage possible (path-based isolation + SQLite per user)</li>
+      <li>Agent sessions scoped to user's ledger instance</li>
+      <li>Can easily shard by user_id if moving to cloud DB later</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h4>Multi-Account per Customer</h4>
+    <ul>
+      <li>Unlimited accounts per user (checking, savings, credit cards, Stripe)</li>
+      <li>Unified ledger enables cross-account analysis</li>
+      <li>Per-account filtering at query time (not separate DBs)</li>
+      <li>Single classification cache shared across accounts (saves cost)</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h4>Incremental by Default</h4>
+    <ul>
+      <li>Ingestion is idempotent (dedup keys prevent duplicates)</li>
+      <li>Classification is incremental (only new descriptions hit LLM)</li>
+      <li>Syncs are additive (Plaid cursor, Stripe pagination)</li>
+      <li>No "overwrite everything" operations</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h4>Future-Ready</h4>
+    <ul>
+      <li>SQLite → PostgreSQL migration path is clean (standard SQL)</li>
+      <li>Ledger schema supports additional source types (Xero, QuickBooks, etc.)</li>
+      <li><code>extra_json</code> field allows source-specific data without schema changes</li>
+      <li>API filter pattern (<code>?account_id=&source_type=</code>) scales to any dimension</li>
+    </ul>
+  </div>
+</div>
+
+<div class="hl" style="margin-top:2rem">
+  <p><strong>Summary:</strong> This architecture moves Shekl.AI from a single-file demo to a production-grade multi-account platform. Every transaction from every source lands in one ledger. Classification is incremental and cost-efficient. The agent understands accounts natively. The UI lets users drill down by account or see everything merged. And the migration is additive — zero downtime, zero data loss.</p>
+</div>
+
+</div>
+</body>
+</html>

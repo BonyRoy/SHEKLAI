@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shekl.AI — Multi-Account Pipeline Proposal</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --surface2: #334155;
+    --border: rgba(255,255,255,0.08);
+    --text: #e2e8f0;
+    --text2: #94a3b8;
+    --accent: #3b82f6;
+    --green: #10b981;
+    --red: #ef4444;
+    --purple: #8b5cf6;
+    --orange: #f59e0b;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Inter',system-ui,-apple-system,sans-serif; background:var(--bg); color:var(--text); line-height:1.6; }
+  .container { max-width:960px; margin:0 auto; padding:3rem 1.5rem 5rem; }
+  h1 { font-size:2rem; font-weight:800; letter-spacing:-1px; margin-bottom:0.5rem; }
+  h1 span { background:linear-gradient(135deg,#3b82f6,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+  .subtitle { color:var(--text2); font-size:1rem; margin-bottom:3rem; }
+  h2 { font-size:1.35rem; font-weight:700; margin:2.5rem 0 1rem; display:flex; align-items:center; gap:0.5rem; }
+  h2 .badge { font-size:0.65rem; font-weight:700; padding:0.2rem 0.6rem; border-radius:12px; text-transform:uppercase; letter-spacing:0.05em; }
+  h3 { font-size:1.05rem; font-weight:600; margin:1.5rem 0 0.75rem; color:var(--text); }
+  p, li { color:var(--text2); font-size:0.9rem; line-height:1.65; }
+  p { margin-bottom:0.75rem; }
+  ul { padding-left:1.5rem; margin-bottom:1rem; }
+  li { margin-bottom:0.35rem; }
+  li strong { color:var(--text); }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:1.5rem; margin-bottom:1.25rem; }
+  .card-header { display:flex; align-items:center; gap:0.75rem; margin-bottom:0.75rem; }
+  .card-icon { width:40px; height:40px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:1.1rem; color:#fff; flex-shrink:0; }
+  .card-title { font-size:1rem; font-weight:700; }
+  .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+  @media(max-width:640px) { .grid-2 { grid-template-columns:1fr; } }
+  .tag { display:inline-block; padding:0.15rem 0.5rem; font-size:0.7rem; font-weight:600; border-radius:6px; margin-right:0.3rem; }
+  .tag-red { background:rgba(239,68,68,0.15); color:#ef4444; }
+  .tag-green { background:rgba(16,185,129,0.15); color:#10b981; }
+  .tag-blue { background:rgba(59,130,246,0.15); color:#3b82f6; }
+  .tag-purple { background:rgba(139,92,246,0.15); color:#8b5cf6; }
+  .tag-orange { background:rgba(245,158,11,0.15); color:#f59e0b; }
+  table { width:100%; border-collapse:collapse; font-size:0.8rem; margin:1rem 0; }
+  th { text-align:left; padding:0.6rem 0.75rem; font-weight:600; color:var(--text2); border-bottom:2px solid var(--border); font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em; }
+  td { padding:0.6rem 0.75rem; border-bottom:1px solid var(--border); color:var(--text2); }
+  tr:hover td { background:rgba(255,255,255,0.02); }
+  code { font-family:'JetBrains Mono','Fira Code',monospace; font-size:0.8rem; background:rgba(255,255,255,0.06); padding:0.15rem 0.4rem; border-radius:4px; color:#93c5fd; }
+  pre { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:1rem; overflow-x:auto; margin:1rem 0; font-size:0.78rem; line-height:1.5; color:#93c5fd; }
+  .flow { display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; margin:1rem 0; }
+  .flow-step { background:var(--surface2); padding:0.5rem 0.75rem; border-radius:8px; font-size:0.8rem; font-weight:600; color:var(--text); white-space:nowrap; }
+  .flow-arrow { color:var(--text2); font-size:1.2rem; }
+  .comparison { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin:1.5rem 0; }
+  @media(max-width:640px) { .comparison { grid-template-columns:1fr; } }
+  .comparison .side { padding:1.25rem; border-radius:12px; }
+  .comparison .current { background:rgba(239,68,68,0.06); border:1px solid rgba(239,68,68,0.2); }
+  .comparison .proposed { background:rgba(16,185,129,0.06); border:1px solid rgba(16,185,129,0.2); }
+  .comparison .side-title { font-size:0.85rem; font-weight:700; margin-bottom:0.75rem; display:flex; align-items:center; gap:0.5rem; }
+  .divider { height:1px; background:var(--border); margin:2rem 0; }
+  .highlight { background:rgba(59,130,246,0.1); border-left:3px solid var(--accent); padding:1rem 1.25rem; border-radius:0 8px 8px 0; margin:1rem 0; }
+  .highlight p { margin:0; color:var(--text); }
+  .metric { text-align:center; padding:1rem; }
+  .metric-value { font-size:1.5rem; font-weight:800; color:var(--text); }
+  .metric-label { font-size:0.75rem; color:var(--text2); margin-top:0.25rem; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1><span>Multi-Account Pipeline</span> Proposal</h1>
+<p class="subtitle">Shekl.AI — Merging Plaid, Stripe, bank uploads, and credit cards into one unified cash flow view</p>
+
+<!-- ============================================ -->
+<h2>Current System Overview</h2>
+
+<p>The pipeline today processes financial data through a <strong>single-file-at-a-time</strong> workflow. Here's how it works end-to-end:</p>
+
+<div class="flow">
+  <div class="flow-step">Upload CSV/Excel</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step">smart_reader</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step">classify_and_save</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step">categories.json</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step">SQLite store</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step">Cash Flow UI</div>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon" style="background:var(--accent)">📁</div>
+      <div><div class="card-title">File Upload</div><p style="margin:0;font-size:0.8rem">CSV, XLS, XLSX</p></div>
+    </div>
+    <p>User uploads one bank statement. <code>smart_reader.py</code> detects format, finds headers, normalizes columns (handles messy Excel, separate Debit/Credit columns).</p>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon" style="background:var(--green)">🏦</div>
+      <div><div class="card-title">Plaid Sync</div><p style="margin:0;font-size:0.8rem">4 accounts connected</p></div>
+    </div>
+    <p>Plaid Link connects banks. Transactions sync to <code>plaid_transactions.csv</code> with Date, Description, Amount, Account, Source columns.</p>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon" style="background:var(--purple)">💳</div>
+      <div><div class="card-title">Stripe Sync</div><p style="margin:0;font-size:0.8rem">Balance transactions</p></div>
+    </div>
+    <p>Stripe API key connects account. Transactions sync to <code>stripe_transactions.csv</code> with Date, Description, Amount, Type, Fee columns.</p>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon" style="background:var(--orange)">🤖</div>
+      <div><div class="card-title">AI Classification</div><p style="margin:0;font-size:0.8rem">Embedding clusters + LLM</p></div>
+    </div>
+    <p>Descriptions are clustered via embeddings, then an LLM assigns cash flow categories. Results stored in <code>categories.json</code> and <code>cash_flow.db</code> (SQLite).</p>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<h2>Your Plaid Data Right Now <span class="badge" style="background:rgba(16,185,129,0.15);color:#10b981">LIVE</span></h2>
+
+<p>You have <strong>4 accounts</strong> connected through Chase (sandbox):</p>
+
+<table>
+  <thead>
+    <tr><th>Account</th><th>Type</th><th>Balance</th><th>Status</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>Plaid Checking</strong> ····0000</td><td>Checking</td><td>$110.00</td><td><span class="tag tag-green">synced</span></td></tr>
+    <tr><td><strong>Plaid Saving</strong> ····1111</td><td>Savings</td><td>$210.00</td><td><span class="tag tag-green">synced</span></td></tr>
+    <tr><td><strong>Plaid Credit Card</strong> ····3333</td><td>Credit Card</td><td>$410.00 owed</td><td><span class="tag tag-green">synced</span></td></tr>
+    <tr><td><strong>Plaid Money Market</strong> ····4444</td><td>Money Market</td><td>$43,200.00</td><td><span class="tag tag-green">synced</span></td></tr>
+  </tbody>
+</table>
+
+<p>The synced <code>plaid_transactions.csv</code> has <strong>28 transactions</strong> across all 4 accounts. But right now they're all dumped into one flat CSV — the pipeline can't tell which account a transaction belongs to.</p>
+
+<div class="divider"></div>
+
+<!-- ============================================ -->
+<h2>Limitations of Current System <span class="badge tag-red">PROBLEMS</span></h2>
+
+<div class="comparison">
+  <div class="side current">
+    <div class="side-title" style="color:#ef4444">❌ Current Limitations</div>
+    <ul>
+      <li><strong>Single-file processing</strong> — each classification run processes ONE file. Can't merge bank statement + credit card + Plaid data into one view.</li>
+      <li><strong>No source tracking</strong> — transactions table has no <code>source_file</code> or <code>account_id</code> column. Can't tell where a transaction came from.</li>
+      <li><strong>No deduplication</strong> — if the same transaction appears in a bank upload AND Plaid sync, it gets counted twice.</li>
+      <li><strong>Overwrites on re-classify</strong> — running classification replaces ALL previous data. Can't incrementally add a new account.</li>
+      <li><strong>No account-level views</strong> — cash flow shows one flat view. Can't break down by "Checking vs Credit Card vs Savings".</li>
+      <li><strong>Plaid/Stripe not auto-classified</strong> — user must manually go to Connect Data, select the CSV, and click "Run Classification" for each synced file.</li>
+      <li><strong>Week calculation is file-relative</strong> — week 0 = first date in that file. Mixing two files with different date ranges produces wrong week alignment.</li>
+    </ul>
+  </div>
+  <div class="side proposed">
+    <div class="side-title" style="color:#10b981">✅ What Users Expect</div>
+    <ul>
+      <li><strong>Unified view</strong> — "Show me all my cash flow across all accounts"</li>
+      <li><strong>Account filtering</strong> — "Show just my credit card spend" or "Compare checking vs savings"</li>
+      <li><strong>Source awareness</strong> — know which bank/source each transaction came from</li>
+      <li><strong>No duplicates</strong> — same transaction from different sources counted once</li>
+      <li><strong>Incremental add</strong> — connect a new bank without losing existing classifications</li>
+      <li><strong>Auto-classify on sync</strong> — Plaid sync → auto-classify → appears in cash flow</li>
+      <li><strong>Calendar-aligned weeks</strong> — consistent week boundaries across all sources</li>
+    </ul>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ============================================ -->
+<h2>Proposed Architecture <span class="badge tag-green">SOLUTION</span></h2>
+
+<div class="highlight">
+  <p><strong>Core idea:</strong> Introduce a <strong>unified transaction ledger</strong> — a master SQLite table that holds ALL transactions from ALL sources, each tagged with its source, account, and a deduplication key. Classification runs against this merged ledger instead of individual files.</p>
+</div>
+
+<h3>New Data Flow</h3>
+
+<div class="flow">
+  <div class="flow-step" style="background:rgba(59,130,246,0.2);border:1px solid rgba(59,130,246,0.3)">Upload / Plaid / Stripe</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step" style="background:rgba(139,92,246,0.2);border:1px solid rgba(139,92,246,0.3)">Ingest & Dedup</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step" style="background:rgba(245,158,11,0.2);border:1px solid rgba(245,158,11,0.3)">Unified Ledger</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step" style="background:rgba(16,185,129,0.2);border:1px solid rgba(16,185,129,0.3)">Classify All</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step" style="background:rgba(239,68,68,0.2);border:1px solid rgba(239,68,68,0.3)">Multi-Account Cash Flow</div>
+</div>
+
+<h3>1. Unified Transaction Ledger (New SQLite Table)</h3>
+
+<pre>CREATE TABLE ledger (
+    id            TEXT PRIMARY KEY,  -- dedup key (see below)
+    source_type   TEXT NOT NULL,     -- 'upload' | 'plaid' | 'stripe'
+    source_name   TEXT,              -- 'Chase' | 'HDFC Bank' | 'Stripe'
+    account_id    TEXT,              -- Plaid account_id | file name | stripe acct
+    account_name  TEXT,              -- 'Checking ····0000' | 'Credit Card ····3333'
+    account_type  TEXT,              -- 'checking' | 'savings' | 'credit' | 'payment'
+    description   TEXT NOT NULL,
+    amount        REAL NOT NULL,     -- signed: positive=inflow, negative=outflow
+    txn_date      TEXT NOT NULL,     -- ISO 8601 YYYY-MM-DD
+    currency      TEXT DEFAULT 'USD',
+    raw_category  TEXT,              -- Plaid's category, Stripe's type, etc.
+    extra_json    TEXT,              -- JSON blob for source-specific fields
+    ingested_at   TEXT NOT NULL,     -- when we imported it
+    category_id   INTEGER REFERENCES categories(id),  -- filled by classification
+    cluster_id    TEXT REFERENCES clusters(id)         -- filled by classification
+);
+
+CREATE INDEX idx_ledger_source ON ledger(source_type);
+CREATE INDEX idx_ledger_account ON ledger(account_id);
+CREATE INDEX idx_ledger_date ON ledger(txn_date);
+CREATE INDEX idx_ledger_category ON ledger(category_id);</pre>
+
+<h3>2. Deduplication Strategy</h3>
+
+<div class="card">
+  <p>Each transaction gets a <strong>dedup key</strong> based on its source:</p>
+  <table>
+    <thead><tr><th>Source</th><th>Dedup Key Formula</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td><span class="tag tag-green">Plaid</span></td><td><code>plaid_{transaction_id}</code></td><td><code>plaid_GAomrwzXbkFlvej...</code></td></tr>
+      <tr><td><span class="tag tag-purple">Stripe</span></td><td><code>stripe_{txn_id}</code></td><td><code>stripe_txn_3PqR8x...</code></td></tr>
+      <tr><td><span class="tag tag-blue">Upload</span></td><td><code>upload_{filename}_{row}_{hash(date+desc+amt)}</code></td><td><code>upload_hdfc_42_a1b2c3</code></td></tr>
+    </tbody>
+  </table>
+  <p style="margin-top:0.75rem">On <code>INSERT OR IGNORE</code>, duplicate keys are silently skipped. Re-syncing Plaid or re-uploading a file won't create duplicates.</p>
+</div>
+
+<h3>3. Ingestion Layer (New Module)</h3>
+
+<p>A new <code>ingest.py</code> module with three ingestion adapters:</p>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="card-title" style="margin-bottom:0.5rem"><span class="tag tag-blue">Upload</span> ingest_upload(user_id, filename)</div>
+    <ul>
+      <li>Reads file via <code>smart_reader</code></li>
+      <li>Resolves columns (description, amount, date)</li>
+      <li>Generates dedup keys from row content</li>
+      <li>Inserts into ledger with <code>source_type='upload'</code></li>
+      <li>Account = filename (e.g., "HDFC 3526")</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-title" style="margin-bottom:0.5rem"><span class="tag tag-green">Plaid</span> ingest_plaid(user_id)</div>
+    <ul>
+      <li>Reads <code>plaid_transactions.csv</code></li>
+      <li>Maps each row's Account column to account name</li>
+      <li>Dedup key = <code>plaid_{Transaction_ID}</code></li>
+      <li>Inserts with <code>source_type='plaid'</code></li>
+      <li>Preserves account-level detail from Plaid</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-title" style="margin-bottom:0.5rem"><span class="tag tag-purple">Stripe</span> ingest_stripe(user_id)</div>
+    <ul>
+      <li>Reads <code>stripe_transactions.csv</code></li>
+      <li>Dedup key = <code>stripe_{Transaction_ID}</code></li>
+      <li>Inserts with <code>source_type='stripe'</code></li>
+      <li>Maps Stripe <code>type</code> to account_type</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-title" style="margin-bottom:0.5rem"><span class="tag tag-orange">Auto-trigger</span> After sync/upload</div>
+    <ul>
+      <li>Plaid sync → auto-ingest → auto-classify</li>
+      <li>Stripe sync → auto-ingest → auto-classify</li>
+      <li>File upload → auto-ingest (classify on request)</li>
+      <li>No manual steps needed for connected accounts</li>
+    </ul>
+  </div>
+</div>
+
+<h3>4. Classification on Merged Ledger</h3>
+
+<p>Instead of classifying one file at a time, the classifier runs against the <strong>entire ledger</strong>:</p>
+
+<div class="card">
+  <ul>
+    <li><strong>Extract</strong> all unique descriptions from <code>ledger</code> table</li>
+    <li><strong>Cluster</strong> via embeddings (same as today — no change)</li>
+    <li><strong>Classify</strong> clusters into cash flow categories via LLM (same as today)</li>
+    <li><strong>Write back</strong> <code>category_id</code> and <code>cluster_id</code> to each ledger row</li>
+    <li><strong>Rebuild</strong> weekly summaries using <strong>calendar-aligned weeks</strong> (ISO week number, not file-relative)</li>
+  </ul>
+  <p style="margin-top:0.5rem"><strong>Incremental option:</strong> When a new source is added, only classify its <em>new</em> descriptions. Existing descriptions reuse their assigned categories. This saves LLM costs and time.</p>
+</div>
+
+<h3>5. Multi-Account Cash Flow Views</h3>
+
+<p>The frontend gets new filtering capabilities:</p>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="card-title" style="margin-bottom:0.5rem">Global View (default)</div>
+    <p>All accounts merged — same as today but with all sources combined. The 13-week cash flow shows total inflow/outflow across everything.</p>
+  </div>
+  <div class="card">
+    <div class="card-title" style="margin-bottom:0.5rem">Filter by Account</div>
+    <p>Dropdown: "All Accounts" | "Checking ····0000" | "Credit Card ····3333" | "HDFC Upload" | "Stripe". Cash flow recalculates for selected account.</p>
+  </div>
+  <div class="card">
+    <div class="card-title" style="margin-bottom:0.5rem">Filter by Source Type</div>
+    <p>Tabs: "All" | "Bank (Plaid)" | "Uploads" | "Stripe". See which data source contributes what to cash flow.</p>
+  </div>
+  <div class="card">
+    <div class="card-title" style="margin-bottom:0.5rem">Account Comparison</div>
+    <p>Side-by-side: Compare checking account spend vs credit card spend. Or compare two banks. Helps spot patterns across accounts.</p>
+  </div>
+</div>
+
+<h3>6. New API Endpoints</h3>
+
+<table>
+  <thead><tr><th>Endpoint</th><th>Method</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><code>/api/ledger/ingest</code></td><td>POST</td><td>Ingest a file/source into the unified ledger</td></tr>
+    <tr><td><code>/api/ledger/classify</code></td><td>POST</td><td>Run classification on the merged ledger</td></tr>
+    <tr><td><code>/api/ledger/accounts</code></td><td>GET</td><td>List all accounts with transaction counts and balances</td></tr>
+    <tr><td><code>/api/ledger/cash-flow</code></td><td>GET</td><td>Cash flow data with optional <code>?account_id=</code> and <code>?source_type=</code> filters</td></tr>
+    <tr><td><code>/api/ledger/transactions</code></td><td>GET</td><td>Paginated transaction list with filters</td></tr>
+    <tr><td><code>/api/ledger/summary</code></td><td>GET</td><td>Overview: total balance, accounts, sources, date range</td></tr>
+  </tbody>
+</table>
+
+<div class="divider"></div>
+
+<!-- ============================================ -->
+<h2>Schema Migration <span class="badge tag-blue">TECHNICAL</span></h2>
+
+<p>The new <code>ledger</code> table replaces the <code>transactions</code> table. Existing tables (<code>categories</code>, <code>clusters</code>, <code>category_summary</code>, <code>category_weekly</code>) stay the same but gain optional account filtering:</p>
+
+<pre>-- New: account-level weekly breakdown
+CREATE TABLE account_weekly (
+    account_id    TEXT NOT NULL,
+    category_id   INTEGER NOT NULL REFERENCES categories(id),
+    week_index    INTEGER NOT NULL,
+    credits       REAL NOT NULL,
+    debits        REAL NOT NULL,
+    PRIMARY KEY (account_id, category_id, week_index)
+);
+
+-- New: account summary
+CREATE TABLE accounts (
+    account_id    TEXT PRIMARY KEY,
+    source_type   TEXT NOT NULL,
+    source_name   TEXT,
+    account_name  TEXT,
+    account_type  TEXT,
+    txn_count     INTEGER,
+    total_credits REAL,
+    total_debits  REAL,
+    first_txn     TEXT,  -- earliest date
+    last_txn      TEXT   -- latest date
+);</pre>
+
+<div class="divider"></div>
+
+<!-- ============================================ -->
+<h2>Implementation Plan <span class="badge tag-orange">PHASES</span></h2>
+
+<div class="card">
+  <h3 style="margin-top:0">Phase 1: Unified Ledger + Ingestion (Backend)</h3>
+  <p><span class="tag tag-blue">~3-4 hours</span> Build the ledger schema, create <code>ingest.py</code> with adapters for upload/Plaid/Stripe. Wire into existing sync endpoints so data auto-ingests.</p>
+  <ul>
+    <li>Create <code>agent/ledger.py</code> — schema, ingest functions, dedup logic</li>
+    <li>Modify <code>plaid_routes.py</code> sync → auto-ingest after sync</li>
+    <li>Modify <code>stripe_routes.py</code> sync → auto-ingest after sync</li>
+    <li>Modify <code>/api/upload</code> → auto-ingest uploaded files</li>
+    <li>New endpoint: <code>GET /api/ledger/accounts</code></li>
+  </ul>
+</div>
+
+<div class="card">
+  <h3 style="margin-top:0">Phase 2: Merged Classification (Backend)</h3>
+  <p><span class="tag tag-purple">~2-3 hours</span> Adapt the classifier to run against the ledger instead of a single file. Support incremental classification.</p>
+  <ul>
+    <li>New <code>/api/ledger/classify</code> endpoint</li>
+    <li>Extract descriptions from ledger, cluster, classify, write back</li>
+    <li>Build <code>account_weekly</code> summaries</li>
+    <li>Calendar-aligned week calculation (ISO weeks)</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h3 style="margin-top:0">Phase 3: Multi-Account Frontend (React)</h3>
+  <p><span class="tag tag-green">~3-4 hours</span> Add account filtering to CashFlow and ClassificationResults pages. Add an accounts overview panel.</p>
+  <ul>
+    <li>Account filter dropdown on CashFlow page</li>
+    <li>Source type tabs (All / Plaid / Uploads / Stripe)</li>
+    <li>Accounts overview card showing all connected accounts</li>
+    <li>Update <code>buildModel()</code> to accept account filter</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h3 style="margin-top:0">Phase 4: Auto-Classify + Polish</h3>
+  <p><span class="tag tag-orange">~1-2 hours</span> Auto-trigger classification after Plaid/Stripe sync. Add dedup status indicators. Polish UX.</p>
+  <ul>
+    <li>Plaid sync → ingest → classify pipeline (fully automatic)</li>
+    <li>Stripe sync → ingest → classify pipeline</li>
+    <li>Show "X new transactions" badge on Connect Data page</li>
+    <li>Dedup stats in sync response ("12 new, 3 duplicates skipped")</li>
+  </ul>
+</div>
+
+<div class="divider"></div>
+
+<!-- ============================================ -->
+<h2>Impact Summary</h2>
+
+<div class="grid-2" style="grid-template-columns:repeat(4,1fr)">
+  <div class="card metric">
+    <div class="metric-value" style="color:var(--green)">4→∞</div>
+    <div class="metric-label">Accounts supported</div>
+  </div>
+  <div class="card metric">
+    <div class="metric-value" style="color:var(--accent)">0</div>
+    <div class="metric-label">Duplicate transactions</div>
+  </div>
+  <div class="card metric">
+    <div class="metric-value" style="color:var(--purple)">3</div>
+    <div class="metric-label">Data sources merged</div>
+  </div>
+  <div class="card metric">
+    <div class="metric-value" style="color:var(--orange)">Auto</div>
+    <div class="metric-label">Classify on sync</div>
+  </div>
+</div>
+
+<div class="highlight" style="margin-top:2rem">
+  <p><strong>Bottom line:</strong> Users connect their banks, credit cards, and Stripe once. From then on, every sync automatically ingests, deduplicates, classifies, and updates the cash flow view. No manual steps. All accounts visible in one dashboard with the ability to drill down by account or source.</p>
+</div>
+
+</div>
+</body>
+</html>
